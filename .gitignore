@@ -73,6 +73,7 @@ Makefile.in
 /config.sub
 /config.log
 /config.status
+/configure
 /configure.scan
 /depcomp
 /install-sh
@@ -81,3 +82,4 @@ Makefile.in
 /m4
 /ltmain.sh
 /libtool
+.dirstamp

@@ -13068,7 +13068,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile server/Makefile server/src/Makefile server/lib/Makefile"
+ac_config_files="$ac_config_files Makefile server/Makefile server/src/Makefile server/lib/Makefile client/Makefile client/src/Makefile client/lib/Makefile shared/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -14090,6 +14090,10 @@ do
     "server/Makefile") CONFIG_FILES="$CONFIG_FILES server/Makefile" ;;
     "server/src/Makefile") CONFIG_FILES="$CONFIG_FILES server/src/Makefile" ;;
     "server/lib/Makefile") CONFIG_FILES="$CONFIG_FILES server/lib/Makefile" ;;
+    "client/Makefile") CONFIG_FILES="$CONFIG_FILES client/Makefile" ;;
+    "client/src/Makefile") CONFIG_FILES="$CONFIG_FILES client/src/Makefile" ;;
+    "client/lib/Makefile") CONFIG_FILES="$CONFIG_FILES client/lib/Makefile" ;;
+    "shared/Makefile") CONFIG_FILES="$CONFIG_FILES shared/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

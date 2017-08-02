@@ -18,9 +18,16 @@ AC_CHECK_HEADERS([ncurses.h pthread.h])
 
 AC_CONFIG_FILES([
 	Makefile
+
 	server/Makefile
 	server/src/Makefile
 	server/lib/Makefile
+	
+	client/Makefile
+	client/src/Makefile
+	client/lib/Makefile
+
+	shared/Makefile
 	])
 
 AC_OUTPUT
