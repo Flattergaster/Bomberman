@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -27,32 +28,49 @@
 
 #include <arpa/inet.h>
 
+#include <curses.h>
+
 #define DEF_DST_IP "192.168.2.1"
 #define DEF_DST_PORT 1337
-
 #define DEF_SRC_IP "192.168.2.83"
 #define DEF_SRC_PORT 8888
 
-#define MAX_MSG_SIZE 1024
-
 #define IP_SIZE 15
 #define PORT_SIZE 6
-#define MAX_WAIT_TIME 10000
+#define MAX_KEY_MSG 64
 #define MAX_HOSTNAME_SIZE 256
-/*#define MAX_AUTH_MSG_SIZE 256*/
+#define MAX_MSG_SIZE 1024
+#define MAX_WAIT_TIME 10000
+
+#define KEY_SPACE_N 32
+#define KEY_ESC 27
+
+#define KEY_L 1
+#define KEY_R 2
+#define KEY_U 3
+#define KEY_D 4
+#define KEY_S 5
+#define KEY_E 6
 
 #define MAP_W 48
 #define MAP_H 20
 
+typedef struct _connect_info {
+    int sd;
+    struct sockaddr_in dst_addr;
+} connect_info_t;
+
 unsigned char map[MAP_H][MAP_W];
 
-void parse_argvs(int argc, char **argv, unsigned char *dst_ip, unsigned  short int *dst_port, unsigned char *src_ip, unsigned short int *src_port);
+void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port, uint8_t *src_ip, uint16_t *src_port);
 void print_usage();
 
 char *get_host_name();
 char *get_src_ip();
 
-void init_socket(int *sd, struct sockaddr_in *dst_addr, unsigned char *dst_ip, unsigned short int *dst_port);
-unsigned char init_connect(int sd, struct sockaddr_in *dst_addr);
+void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip, uint16_t *dst_port);
+uint8_t init_connect(int sd, struct sockaddr_in *dst_addr);
+
+void *control_hndl(void* args);
 
 #endif
