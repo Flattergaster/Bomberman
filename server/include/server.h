@@ -48,6 +48,6 @@ int accept_player(int sd, struct sockaddr_in *addr,
                             socklen_t *addr_len, int p_id);
 int kill_player(int index);
 void *client_thread(void *args);
-int do_action(int index, int key);
+int do_action(int index, uint8_t key);
 void swap(unsigned char *a, unsigned char *b);
 #endif
