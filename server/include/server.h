@@ -33,6 +33,7 @@ typedef struct _player {
     int bomb_str;
     int bomb_pwr;
     int sd;
+    pthread_t tid_player;
     struct sockaddr_in end_point;
 } player_t;
 
@@ -40,9 +41,10 @@ extern player_t players[];
 
 int create_socket(struct sockaddr_in *addr, uint16_t port);
 int create_player(int sd, struct sockaddr_in client_addr);
+int generate_map();
 int listener_new_clients(int sd);
 int accept_player(int sd, struct sockaddr_in *addr, 
                             socklen_t *addr_len, int p_id);
-int generate_map();
+int kill_player(int index);
 void *client_thread(void *args);
 #endif

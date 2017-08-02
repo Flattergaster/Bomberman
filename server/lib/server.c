@@ -103,6 +103,8 @@ int listener_new_clients(int sd) {
                 NULL,
                 client_thread,
                 &args_thread[index_client]);
+        
+        players[index_client].tid_player = threads[index_client];
     }
 
     close(sd);
@@ -117,7 +119,13 @@ void *client_thread(void *args) {
     int status = 0;
     /*char *buffer = NULL;*/
     socklen_t size_addr = 0;
-
+    
+    status = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (status != 0) {
+        perror("pthread_setcancelstate()");
+        close(players[index].sd);
+        pthread_exit(0);
+    }
     size_addr = sizeof(players[index].end_point);
     
     status = accept_player(
@@ -203,6 +211,30 @@ int accept_player(int sd, struct sockaddr_in *addr,
     free(poll_fd);
     free(buffer);
     return 0;
+}
+
+int kill_player(int index) {
+    int status = 0;
+    if (players[index].p_id != 0) {
+        pthread_cancel(players[index].tid_player);
+        
+        status = sendto(
+                    players[index].sd,
+                    "You are dead!",
+                    strlen("You are dead!"),
+                    0,
+                    &players[index].end_point,
+                    sizeof(players[index].end_point));
+        if (status < 0) {
+            perror("sendto()");
+            return -1;
+        }
+        
+        close(players[index].sd);
+        memset(&players[index], 0, sizeof(player_t));
+        return 0;
+    }
+    return -1;
 }
 
 int generate_map() {
