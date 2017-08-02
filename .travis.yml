@@ -6,3 +6,5 @@ compiler:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get -y install libncursesw5-dev
+
+script: ./autorun.sh && make
