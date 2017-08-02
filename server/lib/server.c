@@ -213,6 +213,48 @@ int accept_player(int sd, struct sockaddr_in *addr,
     return 0;
 }
 
+int do_action(int index, int key) {
+    int player_x = 0, player_y = 0;
+    
+    player_x = players[index].x;
+    player_y = players[index].y;
+    
+    switch (key) {
+        case KEY_DOWN:
+            if (map[player_x + 1][player_y] != 1) { /*player_x + 1 < MAP_H && map[player_x + 1][player_y] != 1*/
+                swap(&map[player_x][player_y], &map[player_x + 1][player_y]);
+                players[index].x = player_x + 1;
+            }
+        break;
+        case KEY_UP:
+            if (map[player_x - 1][player_y] != 1) { /*player_x - 1 > 0 && map[player_x - 1][player_y] != 1*/
+                swap(&map[player_x][player_y], &map[player_x - 1][player_y]);
+                players[index].x = player_x - 1;
+            }
+        break;
+        case KEY_LEFT:
+            if (map[player_x][player_y - 1] != 1) { /*player_y - 1 > 0 && map[player_x][player_y - 1] != 1*/
+                swap(&map[player_x][player_y], &map[player_x][player_y - 1]);
+                players[index].y = player_y - 1;
+            }
+        break;
+        case KEY_RIGHT:
+             if (map[player_x][player_y + 1] != 1) { /*player_y + 1 < MAP_W && map[player_x][player_y + 1] != 1*/
+                swap(&map[player_x][player_y], &map[player_x][player_y - 1]);
+                players[index].y = player_y + 1;
+            }
+        break;
+        case KEY_SPACE:
+            /*TODO boom thread*/
+        break;
+        case KEY_EXIT:
+            kill_player(index);
+        break;
+    }
+    
+    return 0;
+}
+
 int kill_player(int index) {
     int status = 0;
     if (players[index].p_id != 0) {
@@ -220,8 +262,8 @@ int kill_player(int index) {
         
         status = sendto(
                     players[index].sd,
-                    "You are dead!",
-                    strlen("You are dead!"),
+                    "Game Over!",
+                    strlen("Game Over!"),
                     0,
                     &players[index].end_point,
                     sizeof(players[index].end_point));
@@ -267,4 +309,12 @@ int generate_map() {
         printf("\n");
     }*/
     return 0;
+}
+
+void swap(unsigned char *a, unsigned char *b) {
+    int temp = 0;
+    
+    temp = *a;
+    *a = *b;
+    *b = temp;
 }
