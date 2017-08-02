@@ -27,6 +27,10 @@ void init_graph();
 
 void init_surf(surface_t **surface);
 
+void del_surf(surface_t **surface);
+
+void print_map(surface_t *surface, unsigned char p_id);
+
 #define ST_CELL      2
 #define BR_CELL      1
 #define EMPTY_CELL   0
