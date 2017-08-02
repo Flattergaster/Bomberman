@@ -1,26 +1,36 @@
 #include "../include/gui.h"
-unsigned char map[MAP_H][MAP_W];
 
+extern NCURSES_EXPORT(int) waddnwstr (WINDOW *, const wchar_t *,int);
+extern NCURSES_EXPORT(int) waddwstr (WINDOW *, const wchar_t *);
 
 void init_graph() {
     WINDOW *rtn = NULL;
+
+    setlocale(LC_ALL, "");
 
     rtn = initscr();
     if (rtn == NULL) {
         perror("Client: initscr error");
         exit(EXIT_FAILURE);
     }
-    setlocale(LC_ALL, 0);
-    /*noecho();*/
+
+    noecho();
     curs_set(0);
-    /*keypad(stdscr, true);*/
-    /*cbreak();*/
+    keypad(stdscr, true);
+    cbreak();
     start_color();
     refresh();
+
     /*LOG - init_graph*/
 }
 
 void init_surf(surface_t **surface) {
+    *surface = calloc(1, sizeof(surface_t));
+    if (*surface == NULL) {
+        perror("Client: calloc(surface)");
+        exit(EXIT_FAILURE);
+    }
+
     (*surface)->p_wnd_map = newwin(MAP_H, MAP_W, INFO_H + 1, 1);
     box((*surface)->p_wnd_map, 0, 0);
     (*surface)->wnd_map = derwin((*surface)->p_wnd_map,
@@ -41,12 +51,13 @@ void del_surf(surface_t **surface){
     delwin((*surface)->p_wnd_info);
     delwin((*surface)->wnd_map);
     delwin((*surface)->wnd_info);
+
     endwin();
 }
 
 void print_map(surface_t *surface, unsigned char p_id){
     int i = 0, j = 0;
-    wchar_t wstr[] = {0x534D, L'\0'};
+
     for (i = 0; i < MAP_H; ++i) {
         for(j = 0; j < MAP_W; ++j) {
             switch (map[i][j]) {
@@ -66,27 +77,13 @@ void print_map(surface_t *surface, unsigned char p_id){
                         waddwstr(surface->wnd_map, ENEMY_U);
                     break;
                 case BOMB:
-                        waddwstr(surface->wnd_map, wstr/*BOMB_U*/);
+                        waddwstr(surface->wnd_map, BOMB_U);
                     break;
                 default:
                     break;
             }
         }
     }
+
     wrefresh(surface->wnd_map);
-}
-
-
-int main(){
-    init_graph();
-    memset(map, 100, MAP_H * MAP_W);
-    surface_t *surface;
-    map[10][10] = 201;
-    map[15][15] = 100;
-    surface = malloc(sizeof(surface_t));
-    init_surf(&surface);
-    print_map(surface, 201);
-    getchar();
-    del_surf(&surface);
-    return 0;
 }
