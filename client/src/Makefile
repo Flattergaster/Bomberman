@@ -4,7 +4,7 @@ LFLAGS =
 vpath %.h ../include/
 vpath %.c ../lib/
 
-client.o: client.c core.c
+client.o: client.c core.c gui.c
 		gcc -c $< $(CFLAGS) $(LFLAGS)
 
 clean:                                                                                 

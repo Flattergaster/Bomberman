@@ -6,7 +6,7 @@ CFLAGS = -std=c99 -O2 -Wall -pedantic -ansi -g
 CC = gcc
 
 SUBDIRS = $(LDIR) $(SDIR)
-OBJCLIENT = $(SDIR)/client.o $(LDIR)/core.o
+OBJCLIENT = $(SDIR)/client.o $(LDIR)/core.o $(LDIR)/gui.o
 
 vpath %.c $(SDIR) : $(LDIR)
 vpath %.o $(SDIR) : $(LDIR)
