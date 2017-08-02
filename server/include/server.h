@@ -43,5 +43,6 @@ int create_player(int sd, struct sockaddr_in client_addr);
 int listener_new_clients(int sd);
 int accept_player(int sd, struct sockaddr_in *addr, 
                             socklen_t *addr_len, int p_id);
+int generate_map();
 void *client_thread(void *args);
 #endif

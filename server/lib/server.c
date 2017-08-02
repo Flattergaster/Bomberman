@@ -64,21 +64,22 @@ int listener_new_clients(int sd) {
     struct sockaddr_in client_addr;
     struct sockaddr_in server_addr;
     pthread_t *threads = NULL;
-    int status = 0, size_message = 64, sd_client = 0, index_client = 0;
+    int status = 0, sd_client = 0, index_client = 0;
     char *buffer = NULL;
     int *args_thread = NULL;
     socklen_t size_addr;
 
     size_addr = sizeof(client_addr);
-    buffer = calloc(size_message, sizeof(char));
+    buffer = calloc(MAX_MESSAGE_SIZE, sizeof(char));
     threads = malloc(sizeof(pthread_t) * MAX_PLAYERS);
     args_thread = malloc(sizeof(int) * MAX_PLAYERS);
 
+    printf("listen...\n");
     while (1) {
         status = recvfrom(
                     sd, 
                     buffer, 
-                    size_message, 
+                    MAX_MESSAGE_SIZE, 
                     0, 
                     &client_addr, 
                     &size_addr);
@@ -86,6 +87,8 @@ int listener_new_clients(int sd) {
             perror("recvfrom()");
             return -1;
         }
+        
+        printf("Client connected\n");
         
         sd_client = create_socket(&server_addr, PORT);
         index_client = create_player(sd_client, client_addr);
@@ -117,8 +120,13 @@ void *client_thread(void *args) {
 
     size_addr = sizeof(players[index].end_point);
     
-    status = accept(players[index].sd, &players[index].end_point, &size_addr);
+    status = accept_player(
+                    players[index].sd,
+                    &players[index].end_point,
+                    &size_addr,
+                    players[index].p_id);
     if (status < 0) {
+        close(players[index].sd);
         pthread_exit(0);
     }
     
@@ -137,6 +145,38 @@ int accept_player(int sd, struct sockaddr_in *addr,
 
     poll_fd->fd = sd;
     poll_fd->events = POLLIN;
+    
+    status = sendto(
+                sd,
+                &p_id,
+                sizeof(p_id),
+                0,
+                addr,
+                *addr_len);
+    if (status < 0) {
+        perror("sendto()");
+        free(poll_fd);
+        free(buffer);
+        close(sd);
+        return -1;
+    }
+    
+    status = sendto(
+                sd,
+                map,
+                MAP_H * MAP_W,
+                0,
+                addr,
+                *addr_len);
+     if (status < 0) {
+        perror("sendto()");
+        free(poll_fd);
+        free(buffer);
+        close(sd);
+        return -1;
+    }
+    
+    printf("Send p_id & map to client\n");
     
     status = poll(poll_fd, 1, 10000);
     if (status < 0) {
@@ -157,39 +197,42 @@ int accept_player(int sd, struct sockaddr_in *addr,
                     0,
                     addr,
                     addr_len);
-        
-        status = sendto(
-                    sd,
-                    &p_id,
-                    sizeof(p_id),
-                    0,
-                    addr,
-                    *addr_len);
-        if (status < 0) {
-            perror("sendto()");
-            free(poll_fd);
-            free(buffer);
-            close(sd);
-            return -1;
-        }
-        
-        status = sendto(
-                    sd,
-                    map,
-                    MAP_H * MAP_W,
-                    0,
-                    addr,
-                    *addr_len);
-         if (status < 0) {
-            perror("sendto()");
-            free(poll_fd);
-            free(buffer);
-            close(sd);
-            return -1;
-        }
+        printf("Accept connection with client\n");
     }
     
     free(poll_fd);
     free(buffer);
+    return 0;
+}
+
+int generate_map() {
+    int i, j, k;
+    
+    memset(map, 0, MAP_H * MAP_W);
+    
+    for (j = 0; j < MAP_W; j++) {
+        map[0][j] = 1;
+        map[MAP_H - 1][j] = 1;
+    }
+    
+     for (i = 0; i < MAP_H; i++) {
+        map[i][0] = 1;
+        map[i][MAP_W - 1] = 1;
+    }
+    
+    for (i = 2; i < MAP_H - 1; i += 2) {
+        for (j = 2; j < MAP_W - 1; j += 2) {
+            for (k = 0; k < MAP_W; k += 2) {
+                map[i][k] = 1;
+            }
+        }
+    }
+    /*
+    for (i = 0; i < MAP_H; i++) {
+        for (j = 0; j < MAP_W; j++) {
+            printf("%d ", map[i][j]);
+        }
+        printf("\n");
+    }*/
     return 0;
 }
