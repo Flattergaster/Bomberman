@@ -158,7 +158,7 @@ uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
     s_len = sizeof(struct sockaddr_in);
     memset(dst_addr, 0, s_len);
 
-    bts = recvfrom(sd, &p_id, MAX_MSG_SIZE, 0, (struct sockaddr*)dst_addr, &s_len);
+    bts = recvfrom(sd, &p_id, sizeof(uint8_t), 0, (struct sockaddr*)dst_addr, &s_len);
     if (bts == -1) {
         perror("Client: recvfrom(dest_ip)");
         exit(EXIT_FAILURE);
