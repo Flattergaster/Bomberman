@@ -76,18 +76,3 @@ void print_map(surface_t *surface, unsigned char p_id){
     }
     wrefresh(surface->wnd_map);
 }
-
-
-int main(){
-    init_graph();
-    memset(map, 100, MAP_H * MAP_W);
-    surface_t *surface;
-    map[10][10] = 201;
-    map[15][15] = 100;
-    surface = malloc(sizeof(surface_t));
-    init_surf(&surface);
-    print_map(surface, 201);
-    getchar();
-    del_surf(&surface);
-    return 0;
-}
