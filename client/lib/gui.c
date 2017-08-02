@@ -1,5 +1,7 @@
 #include "../include/gui.h"
 
+unsigned char map[MAP_H][MAP_W];
+
 extern NCURSES_EXPORT(int) waddnwstr (WINDOW *, const wchar_t *,int);
 extern NCURSES_EXPORT(int) waddwstr (WINDOW *, const wchar_t *);
 
