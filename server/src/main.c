@@ -11,7 +11,7 @@ int main() {
     
     memset(players, 0, MAX_PLAYERS);
     generate_map();
-    
+   
     status = listener_new_clients(sd);
     if (status < 0)  {
         exit(EXIT_FAILURE);
