@@ -7,7 +7,6 @@
 #define _XOPEN_SOURCE
 #define _SVID_SOURCE
 #define _BSD_SOURCE
-#define _GNU_SOURCE
 #define _DEFAULT_SOURCE
 
 #include <stdio.h>
@@ -28,7 +27,7 @@
 
 #include <arpa/inet.h>
 
-#include <curses.h>
+#include "gui.h"
 
 #define DEF_DST_IP "192.168.2.1"
 #define DEF_DST_PORT 1337
@@ -51,9 +50,6 @@
 #define KEY_D 4
 #define KEY_S 5
 #define KEY_E 6
-
-#define MAP_W 48
-#define MAP_H 20
 
 typedef struct _connect_info {
     int sd;

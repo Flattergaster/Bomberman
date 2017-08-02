@@ -1,3 +1,6 @@
+#ifndef GUI_H
+#define GUI_H
+
 #define _GNU_SORCE
 
 #include <locale.h>
@@ -24,11 +27,8 @@ typedef struct _surface {
 } surface_t;
 
 void init_graph();
-
 void init_surf(surface_t **surface);
-
 void del_surf(surface_t **surface);
-
 void print_map(surface_t *surface, unsigned char p_id);
 
 #define ST_CELL      2
@@ -44,3 +44,5 @@ void print_map(surface_t *surface, unsigned char p_id);
 #define ST_CELL_U    L"\u25A6"
 #define BR_CELL_U    L"\u25A4"
 #define EMPTY_CELL_U L"\u1234"
+
+#endif
