@@ -28,6 +28,8 @@ typedef struct _player {
     int prev_y;
     int bomb_str;
     int bomb_pwr;
+    int bomb_cur;
+    int bomb_max;
     int sd;
     pthread_t tid_player;
     struct sockaddr_in end_point;
