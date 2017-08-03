@@ -20,7 +20,7 @@ int create_socket(struct sockaddr_in *addr, uint16_t port) {
 
     if (bind(sd, addr, size) < 0) {
         if (errno == EADDRINUSE) {
-            for (i = PORT + 1; i < MAX_PORT_VALUE; i++) {
+            for (i = SERVER_PORT + 1; i < MAX_PORT_VALUE; i++) {
                 errno = 0;
                 addr->sin_port = htons(i);
                 
@@ -73,7 +73,7 @@ int listener_new_clients(int sd) {
     socklen_t size_addr;
 
     size_addr = sizeof(client_addr);
-    buffer = calloc(MAX_MESSAGE_SIZE, sizeof(char));
+    buffer = calloc(MAX_MSG_SIZE, sizeof(char));
     threads = malloc(sizeof(pthread_t) * MAX_PLAYERS);
     args_thread = malloc(sizeof(int) * MAX_PLAYERS);
 
@@ -82,7 +82,7 @@ int listener_new_clients(int sd) {
         status = recvfrom(
                     sd, 
                     buffer, 
-                    MAX_MESSAGE_SIZE, 
+                    MAX_MSG_SIZE, 
                     0, 
                     &client_addr, 
                     &size_addr);
@@ -93,7 +93,7 @@ int listener_new_clients(int sd) {
         
         printf("Client connected\n");
         
-        sd_client = create_socket(&server_addr, PORT);
+        sd_client = create_socket(&server_addr, MAX_MSG_SIZE);
         index_client = create_player(sd_client, client_addr);
         
         if (index_client < 0) {
@@ -174,7 +174,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
     char *buffer = NULL;
     
     poll_fd = malloc(sizeof(struct pollfd));
-    buffer = malloc(sizeof(char) * MAX_MESSAGE_SIZE);
+    buffer = malloc(sizeof(char) * MAX_MSG_SIZE);
 
     poll_fd->fd = sd;
     poll_fd->events = POLLIN;
@@ -226,7 +226,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
         status = recvfrom(
                     sd,
                     buffer,
-                    MAX_MESSAGE_SIZE,
+                    MAX_MSG_SIZE,
                     0,
                     addr,
                     addr_len);
