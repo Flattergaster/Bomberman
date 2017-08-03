@@ -15,7 +15,7 @@
 #define WND_W 51
 #define WND_H 24
 #define MAP_W 49
-#define MAP_H 20
+#define MAP_H 21
 #define INFO_W 49
 #define INFO_H 3
 
