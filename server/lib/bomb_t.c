@@ -1,7 +1,5 @@
 #include "../include/server.h"
 
-
-
 void* bomb_thr(void* arg){
     int ind = (int) arg;
     int i = 0, j = 0, prev_x = 0, prev_y = 0;
