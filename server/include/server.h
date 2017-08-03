@@ -24,6 +24,8 @@ typedef struct _player {
     int p_id;
     int x;
     int y;
+    int prev_x;
+    int prev_y;
     int bomb_str;
     int bomb_pwr;
     int sd;
