@@ -41,7 +41,7 @@ int create_player(int sd, struct sockaddr_in client_addr) {
     int index = 0;
     struct sockaddr_in server_addr;
 
-    sd = create_socket(&server_addr, PORT);
+    sd = create_socket(&server_addr, SERVER_PORT);
 
     for (index = 0; index < MAX_PLAYERS; index++) {
         if (players[index].p_id == 0) {
@@ -50,7 +50,7 @@ int create_player(int sd, struct sockaddr_in client_addr) {
             do {
                 players[index].x = rand() % MAP_H;
                 players[index].y = rand() % MAP_W;                
-            } while (map[players[index].x][players[index].y] == 1);
+            } while (map[players[index].x][players[index].y] == ST_CELL);
             map[players[index].x][players[index].y] = players[index].p_id;
             players[index].bomb_str = rand();
             players[index].bomb_pwr = rand();
@@ -320,18 +320,18 @@ int generate_map() {
     
     for (j = 0; j < MAP_W; j++) {
         map[0][j] = 1;
-        map[MAP_H - 1][j] = 1;
+        map[MAP_H - 1][j] = ST_CELL;
     }
     
      for (i = 0; i < MAP_H; i++) {
         map[i][0] = 1;
-        map[i][MAP_W - 1] = 1;
+        map[i][MAP_W - 1] = ST_CELL;
     }
     
     for (i = 2; i < MAP_H - 1; i += 2) {
         for (j = 2; j < MAP_W - 1; j += 2) {
             for (k = 0; k < MAP_W; k += 2) {
-                map[i][k] = 1;
+                map[i][k] = ST_CELL;
             }
         }
     }
