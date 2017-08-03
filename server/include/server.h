@@ -21,7 +21,7 @@
 #define MAX_PORT_VALUE 65535
 #define MAX_PLAYERS 10
 
-#define MAP_W 48
+#define MAP_W 49
 #define MAP_H 20
 
 #define MAX_MESSAGE_SIZE 1024

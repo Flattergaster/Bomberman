@@ -1,7 +1,6 @@
 #include "../include/server.h"
 
 player_t players[MAX_PLAYERS];
-unsigned char map[MAP_H][MAP_W];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
@@ -47,10 +46,12 @@ int create_player(int sd, struct sockaddr_in client_addr) {
     for (index = 0; index < MAX_PLAYERS; index++) {
         if (players[index].p_id == 0) {
             /*TODO after add shared constants*/
-            players[index].p_id = rand() + 4;
-            players[index].x = rand() % MAP_H;
-            players[index].y = rand() % MAP_W;
-            map[players[index].x][players[index].y] = 5;
+            players[index].p_id = 200;
+            do {
+                players[index].x = rand() % MAP_H;
+                players[index].y = rand() % MAP_W;                
+            } while (map[players[index].x][players[index].y] == 1);
+            map[players[index].x][players[index].y] = players[index].p_id;
             players[index].bomb_str = rand();
             players[index].bomb_pwr = rand();
             players[index].sd = sd;
