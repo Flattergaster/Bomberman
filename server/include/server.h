@@ -4,6 +4,9 @@
 #define _POSIX_C_SOURCE 1
 #define _GNU_SOURCE
 
+#define PORT 1337
+#define MAX_MESSAGE_SIZE 1400
+
 #define BOMB         100
 #define FIRE         101
 
@@ -46,4 +49,6 @@ int kill_player(int index);
 void *client_thread(void *args);
 int do_action(int index, uint8_t key);
 void swap(unsigned char *a, unsigned char *b);
+void move(int index, int mov_x, int mov_y);
+void move_player(int index, int key);
 #endif
