@@ -25,4 +25,4 @@ void log_notice(FILE *fd, const char *format, ...);
 void log_warn(FILE *fd, const char *format, ...);
 void log_error(FILE *fd, const char *format, ...);
 
-#endif /*BOMBERMAN_UTIL_H*/
+#endif  /* BOMBERMAN_UTIL_H */
