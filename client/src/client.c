@@ -26,11 +26,11 @@ int main(int argc, char **argv) {
     c_info.sd = sd;
     c_info.dst_addr = dst_addr;
 
-    printf("[INFO] Player ID: %hu\n", p_id);
+    /*printf("[INFO] Player ID: %hu\n", p_id);*/
 
     dst_hst = gethostbyaddr((char *)&dst_addr.sin_addr.s_addr, 4, AF_INET);
-    printf("Connected to the server: %s:%hu (host name: %s)\n", inet_ntoa(dst_addr.sin_addr), ntohs(dst_addr.sin_port),
-    ((dst_hst != NULL) ? dst_hst->h_name : ""));
+    /*printf("Connected to the server: %s:%hu (host name: %s)\n", inet_ntoa(dst_addr.sin_addr), ntohs(dst_addr.sin_port),
+    ((dst_hst != NULL) ? dst_hst->h_name : ""));*/
 
     /*printf("\n");
     for (i = 0; i < MAP_H; ++i) {
