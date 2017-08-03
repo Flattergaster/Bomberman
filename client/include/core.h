@@ -1,14 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
-/*#define _ISOC99_SOURCE
-#define _POSIX_SOURCE
-#define _POSIX_C_SOURCE
-#define _XOPEN_SOURCE
-#define _SVID_SOURCE
-#define _BSD_SOURCE
-#define _DEFAULT_SOURCE
-*/
+#define _GNU_SORCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -54,6 +48,8 @@
 typedef struct _connect_info {
     int sd;
     struct sockaddr_in dst_addr;
+    uint8_t p_id;
+    surface_t *surface;
 } connect_info_t;
 
 unsigned char map[MAP_H][MAP_W];
@@ -65,8 +61,9 @@ char *get_host_name();
 char *get_src_ip();
 
 void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip, uint16_t *dst_port);
-uint8_t init_connect(int sd, struct sockaddr_in *dst_addr);
+uint8_t init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, connect_info_t *c_info);
 
 void *control_hndl(void* args);
+void *recv_hndl(void* args);
 
 #endif
