@@ -1,7 +1,7 @@
 #include "../include/server.h"
 
 player_t players[MAX_PLAYERS];
-unsigned char map[MAP_H][MAP_W];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
     int sd = 0, i = 0;
@@ -46,9 +46,12 @@ int create_player(int sd, struct sockaddr_in client_addr) {
     for (index = 0; index < MAX_PLAYERS; index++) {
         if (players[index].p_id == 0) {
             /*TODO after add shared constants*/
-            players[index].p_id = rand() + 4;
-            players[index].x = rand();
-            players[index].y = rand();
+            players[index].p_id = 200;
+            do {
+                players[index].x = rand() % MAP_H;
+                players[index].y = rand() % MAP_W;                
+            } while (map[players[index].x][players[index].y] == 1);
+            map[players[index].x][players[index].y] = players[index].p_id;
             players[index].bomb_str = rand();
             players[index].bomb_pwr = rand();
             players[index].sd = sd;
@@ -103,6 +106,8 @@ int listener_new_clients(int sd) {
                 NULL,
                 client_thread,
                 &args_thread[index_client]);
+        
+        players[index_client].tid_player = threads[index_client];
     }
 
     close(sd);
@@ -115,9 +120,15 @@ int listener_new_clients(int sd) {
 void *client_thread(void *args) {
     int index = *((int *) args);
     int status = 0;
-    /*char *buffer = NULL;*/
+    uint8_t pressed_key = 0;
     socklen_t size_addr = 0;
-
+    
+    status = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (status != 0) {
+        perror("pthread_setcancelstate()");
+        close(players[index].sd);
+        pthread_exit(0);
+    }
     size_addr = sizeof(players[index].end_point);
     
     status = accept_player(
@@ -128,6 +139,28 @@ void *client_thread(void *args) {
     if (status < 0) {
         close(players[index].sd);
         pthread_exit(0);
+    }
+    
+    while (1) {
+        recvfrom(
+            players[index].sd,
+            &pressed_key,
+            sizeof(uint8_t),
+            0,
+            &players[index].end_point,
+            &size_addr);
+        printf("Client pressed key\n");
+        pthread_mutex_lock(&mutex);
+        do_action(index, pressed_key);
+        pthread_mutex_unlock(&mutex);
+        printf("Send action on the pressed key\n");
+        sendto(
+            players[index].sd,
+            map,
+            MAP_H * MAP_W,
+            0,
+            &players[index].end_point,
+            size_addr);
     }
     
     close(players[index].sd);
@@ -197,12 +230,87 @@ int accept_player(int sd, struct sockaddr_in *addr,
                     0,
                     addr,
                     addr_len);
+        printf("buffer: %s\n", buffer);
         printf("Accept connection with client\n");
     }
     
     free(poll_fd);
     free(buffer);
     return 0;
+}
+
+int do_action(int index, uint8_t key) {
+    int player_x = 0, player_y = 0, i = 0, j = 0;
+    
+    player_x = players[index].x;
+    player_y = players[index].y;
+    
+    printf("Do action\n");
+    switch (key) {
+        case KEY_D:
+            if (map[player_x + 1][player_y] != 1) { /*player_x + 1 < MAP_H && map[player_x + 1][player_y] != 1*/
+                swap(&map[player_x][player_y], &map[player_x + 1][player_y]);
+                players[index].x = player_x + 1;
+            }
+        break;
+        case KEY_U:
+            if (map[player_x - 1][player_y] != 1) { /*player_x - 1 > 0 && map[player_x - 1][player_y] != 1*/
+                swap(&map[player_x][player_y], &map[player_x - 1][player_y]);
+                players[index].x = player_x - 1;
+            }
+        break;
+        case KEY_L:
+            if (map[player_x][player_y - 1] != 1) { /*player_y - 1 > 0 && map[player_x][player_y - 1] != 1*/
+                swap(&map[player_x][player_y], &map[player_x][player_y - 1]);
+                players[index].y = player_y - 1;
+            }
+        break;
+        case KEY_R:
+             if (map[player_x][player_y + 1] != 1) { /*player_y + 1 < MAP_W && map[player_x][player_y + 1] != 1*/
+                swap(&map[player_x][player_y], &map[player_x][player_y + 1]);
+                players[index].y = player_y + 1;
+            }
+        break;
+        case KEY_S:
+            /*TODO boom thread*/
+        break;
+        case KEY_E:
+            kill_player(index);
+        break;
+    }
+    
+    for (i = 0; i < MAP_H; i++) {
+        for (j = 0; j < MAP_W; j++) {
+            printf("%2d", map[i][j]);
+        }
+        printf("\n");
+    }
+    
+    return 0;
+}
+
+int kill_player(int index) {
+    int status = 0;
+    if (players[index].p_id != 0) {
+        pthread_cancel(players[index].tid_player);
+        
+        status = sendto(
+                    players[index].sd,
+                    "Game Over!",
+                    strlen("Game Over!"),
+                    0,
+                    &players[index].end_point,
+                    sizeof(players[index].end_point));
+        if (status < 0) {
+            perror("sendto()");
+            return -1;
+        }
+        
+        close(players[index].sd);
+        memset(&players[index], 0, sizeof(player_t));
+        return 0;
+    }
+    return -1;
 }
 
 int generate_map() {
@@ -227,7 +335,7 @@ int generate_map() {
             }
         }
     }
-    /*
+   /* 
     for (i = 0; i < MAP_H; i++) {
         for (j = 0; j < MAP_W; j++) {
             printf("%d ", map[i][j]);
@@ -235,4 +343,12 @@ int generate_map() {
         printf("\n");
     }*/
     return 0;
+}
+
+void swap(unsigned char *a, unsigned char *b) {
+    int temp = 0;
+    
+    temp = *a;
+    *a = *b;
+    *b = temp;
 }

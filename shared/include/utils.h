@@ -8,6 +8,13 @@
 #define E_ERROR 2
 #define E_ALL 3
 
+#define KEY_L 1
+#define KEY_R 2
+#define KEY_U 3
+#define KEY_D 4
+#define KEY_S 5
+#define KEY_E 6
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
