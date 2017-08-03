@@ -15,7 +15,7 @@
 #define WND_W 51
 #define WND_H 24
 #define MAP_W 49
-#define MAP_H 20
+#define MAP_H 21
 #define INFO_W 49
 #define INFO_H 3
 
@@ -28,6 +28,7 @@ typedef struct _surface {
 
 void init_graph();
 void init_surf(surface_t **surface);
+
 void del_surf(surface_t **surface);
 void print_map(surface_t *surface, unsigned char p_id);
 

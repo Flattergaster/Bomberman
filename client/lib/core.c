@@ -1,4 +1,5 @@
 #include "../include/core.h"
+#include "../include/gui.h"
 
 void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
                         uint8_t *src_ip, uint16_t *src_port) {
@@ -103,7 +104,7 @@ void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip,
     dst_addr->sin_port = htons(*dst_port);
 }
 
-uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
+uint8_t init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, connect_info_t *c_info) {
     uint8_t p_id = 0, msg[MAX_MSG_SIZE];
     int epd = 0, rtn = 0;
     struct epoll_event ev, *events = NULL;
@@ -181,6 +182,11 @@ uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
         exit(EXIT_FAILURE);
     }
 
+    c_info->sd = sd;
+    c_info->dst_addr = *dst_addr;
+    c_info->p_id = p_id;
+    c_info->surface = surface;
+
     return p_id;
 }
 
@@ -203,6 +209,7 @@ void *control_hndl(void* args) {
     do {
         key = getch();
         pressed_key = 0;
+
         switch(key) {
             case KEY_UP:
                 pressed_key = KEY_U;
@@ -241,5 +248,23 @@ void *control_hndl(void* args) {
 }
 
 void *recv_hndl(void* args) {
-    return NULL;
+    connect_info_t *c_info = NULL;
+    ssize_t bts = 0;
+
+    if (args == NULL) {
+        perror("Client: args is NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    c_info = (connect_info_t *)args;
+
+    do {
+        bts = recvfrom(c_info->sd, map, MAP_H * MAP_W, 0, NULL, NULL);
+        if (bts == -1) {
+            perror("Client: recvfrom(dest_ip)");
+            exit(EXIT_FAILURE);
+        }
+
+        print_map(c_info->surface, c_info->p_id);
+    } while (1);
 }
