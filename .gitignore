@@ -83,3 +83,7 @@ Makefile.in
 /ltmain.sh
 /libtool
 .dirstamp
+
+#AntiArtem
+/COPYING
+/INSTALL
