@@ -33,15 +33,15 @@ void init_surf(surface_t **surface) {
         exit(EXIT_FAILURE);
     }
 
-    (*surface)->p_wnd_map = newwin(MAP_H, MAP_W, INFO_H + 1, 1);
+    (*surface)->p_wnd_map = newwin(MAP_H + 2, WND_W, INFO_H, 1);
     box((*surface)->p_wnd_map, 0, 0);
     (*surface)->wnd_map = derwin((*surface)->p_wnd_map,
-                                    MAP_H - 2, MAP_W - 2, 1, 1);
+                                    MAP_H, MAP_W, 1, 1);
 
-    (*surface)->p_wnd_info = newwin(MAP_H, MAP_W, INFO_H + 1, 1);
+    (*surface)->p_wnd_info = newwin(INFO_H, WND_W, 1, 1);
     box((*surface)->p_wnd_info, 0, 0);
     (*surface)->wnd_info = derwin((*surface)->p_wnd_info,
-                                    MAP_H - 2, MAP_W - 2, 1, 1);
+                                    1, INFO_W, 1, 1);
 
     wrefresh((*surface)->p_wnd_map);
     wrefresh((*surface)->p_wnd_info);
@@ -82,6 +82,7 @@ void print_map(surface_t *surface, unsigned char p_id){
                         waddwstr(surface->wnd_map, BOMB_U);
                     break;
                 default:
+                    waddwstr(surface->wnd_map, EMPTY_CELL_U);
                     break;
             }
         }
