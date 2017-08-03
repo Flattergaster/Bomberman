@@ -9,6 +9,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
     
+    srand(time(NULL));
     memset(players, 0, MAX_PLAYERS);
     generate_map();
    
