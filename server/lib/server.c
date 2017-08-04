@@ -1,7 +1,10 @@
 #include "../include/server.h"
 
 player_t players[MAX_PLAYERS];
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_map = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_exit_player = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_player[MAX_PLAYERS];
+int exit_state = 0;
 
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
     int sd = 0, i = 0;
@@ -69,15 +72,19 @@ int listener_new_clients(int sd) {
     pthread_t *threads = NULL;
     int status = 0, sd_client = 0, index_client = 0;
     char *buffer = NULL;
-    int *args_thread = NULL;
+    int *args_thread = NULL, i = 0;
     socklen_t size_addr;
 
     size_addr = sizeof(client_addr);
     buffer = calloc(MAX_MSG_SIZE, sizeof(char));
     threads = malloc(sizeof(pthread_t) * MAX_PLAYERS);
     args_thread = malloc(sizeof(int) * MAX_PLAYERS);
+    
+    for (i = 0; i < MAX_PLAYERS; i++) {
+        mutex_player[i] = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+    }
 
-    printf("listen...\n");
+    log_notice(stdout, "listen...\n");
     while (1) {
         status = recvfrom(
                     sd, 
@@ -87,11 +94,11 @@ int listener_new_clients(int sd) {
                     &client_addr, 
                     &size_addr);
         if (status < 0) {
-            perror("recvfrom()");
+            log_error(stdout, "recvfrom()");
             return -1;
         }
         
-        printf("Client connected\n");
+        log_notice(stdout, "Client connected\n");
         
         sd_client = create_socket(&server_addr, MAX_MSG_SIZE);
         index_client = create_player(sd_client, client_addr);
@@ -119,16 +126,10 @@ int listener_new_clients(int sd) {
 
 void *client_thread(void *args) {
     int index = *((int *) args);
-    int status = 0;
+    int status = 0, breaking_packets = 0;
     uint8_t pressed_key = 0;
     socklen_t size_addr = 0;
     
-    status = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    if (status != 0) {
-        perror("pthread_setcancelstate()");
-        close(players[index].sd);
-        pthread_exit(0);
-    }
     size_addr = sizeof(players[index].end_point);
     
     status = accept_player(
@@ -137,30 +138,48 @@ void *client_thread(void *args) {
                     &size_addr,
                     players[index].p_id);
     if (status < 0) {
+        log_error(stdout, "accept(): %s", strerror(errno));
+       
         close(players[index].sd);
-        pthread_exit(0);
+        pthread_exit((void *) -1);
     }
     
     while (1) {
-        recvfrom(
-            players[index].sd,
-            &pressed_key,
-            sizeof(uint8_t),
-            0,
-            &players[index].end_point,
-            &size_addr);
-        printf("Client pressed key\n");
-        pthread_mutex_lock(&mutex);
-        do_action(index, pressed_key);
-        pthread_mutex_unlock(&mutex);
-        printf("Send action on the pressed key\n");
-        sendto(
-            players[index].sd,
-            map,
-            MAP_H * MAP_W,
-            0,
-            &players[index].end_point,
-            size_addr);
+        status = recvfrom(
+                    players[index].sd,
+                    &pressed_key,
+                    sizeof(uint8_t),
+                    0,
+                    &players[index].end_point,
+                    &size_addr);
+        if (status < 0) {
+            log_error(stdout, "recvfrom(key): %s", strerror(errno));
+            if (breaking_packets < 3) {
+                breaking_packets++;
+                continue;
+            } else {
+                close(players[index].sd);
+                pthread_exit((void *) -1);
+            }
+        }
+        
+        log_notice(stdout, "Client pressed key\n");
+        
+        pthread_mutex_lock(&mutex_map);
+        status = do_action(index, pressed_key);
+        pthread_mutex_unlock(&mutex_map);
+        
+        if (status == 0) {
+            broadcast_map();
+            
+            if (exit_state == 1) {
+                pthread_mutex_lock(&mutex_exit_player);
+                exit_state = 0;
+                pthread_mutex_unlock(&mutex_exit_player);
+                
+                break;
+            }
+        }
     }
     
     close(players[index].sd);
@@ -291,9 +310,7 @@ int do_action(int index, uint8_t key) {
 
 int kill_player(int index) {
     int status = 0;
-    if (players[index].p_id != 0) {
-        pthread_cancel(players[index].tid_player);
-        
+    if (players[index].p_id != 0) {        
         status = sendto(
                     players[index].sd,
                     "Game Over!",
@@ -302,12 +319,18 @@ int kill_player(int index) {
                     &players[index].end_point,
                     sizeof(players[index].end_point));
         if (status < 0) {
-            perror("sendto()");
+            log_error(stdout, "sendto(): %s", strerror(errno));
             return -1;
         }
         
+        map[players[index].x][players[index].y] = EMPTY_CELL;
+        
         close(players[index].sd);
         memset(&players[index], 0, sizeof(player_t));
+        
+        pthread_mutex_lock(&mutex_exit_player);
+        exit_state = 1;
+        pthread_mutex_unlock(&mutex_exit_player);
         return 0;
     }
     return -1;
@@ -335,14 +358,27 @@ int generate_map() {
             }
         }
     }
-   /* 
-    for (i = 0; i < MAP_H; i++) {
-        for (j = 0; j < MAP_W; j++) {
-            printf("%d ", map[i][j]);
-        }
-        printf("\n");
-    }*/
     return 0;
+}
+
+void broadcast_map() {
+    int i = 0, status = 0;
+    
+    log_notice(stdout, "Send action on the pressed key\n");
+    for (i = 0; i < MAX_PLAYERS; i++) {
+        if (players[i].sd != 0) {
+            status = sendto(
+                        players[i].sd,
+                        map,
+                        MAP_H * MAP_W,
+                        0,
+                        &players[i].end_point,
+                        sizeof(players[i].end_point));
+             if (status < 0) {
+                log_error(stdout, "sendto(map): %s", strerror(errno));
+            }
+        }
+    }
 }
 
 void swap(unsigned char *a, unsigned char *b) {

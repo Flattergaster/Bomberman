@@ -33,6 +33,11 @@ typedef struct _player {
     struct sockaddr_in end_point;
 } player_t;
 
+typedef struct _msg_queue {
+    long type;
+    short exit;
+} msg_queue;
+
 extern player_t players[];
 unsigned char map[MAP_H][MAP_W];
 
@@ -46,4 +51,5 @@ int kill_player(int index);
 void *client_thread(void *args);
 int do_action(int index, uint8_t key);
 void swap(unsigned char *a, unsigned char *b);
+void broadcast_map();
 #endif
