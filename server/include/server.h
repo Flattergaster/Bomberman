@@ -4,6 +4,9 @@
 #define _POSIX_C_SOURCE 1
 #define _GNU_SOURCE
 
+#define PORT 1337
+#define MAX_MESSAGE_SIZE 1400
+
 #define BOMB         100
 #define FIRE         101
 
@@ -28,6 +31,8 @@ typedef struct _player {
     int prev_y;
     int bomb_str;
     int bomb_pwr;
+    int bomb_cur;
+    int bomb_max;
     int sd;
     pthread_t tid_player;
     struct sockaddr_in end_point;
@@ -46,4 +51,8 @@ int kill_player(int index);
 void *client_thread(void *args);
 int do_action(int index, uint8_t key);
 void swap(unsigned char *a, unsigned char *b);
+void move(int index, int mov_x, int mov_y);
+void move_player(int index, int key);
+void set_player_pos(int index, int mov_x, int mov_y);
+void apply_player_buff(int index, int b_type);
 #endif

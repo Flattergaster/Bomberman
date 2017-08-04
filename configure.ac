@@ -29,6 +29,7 @@ AC_CONFIG_FILES([
 	client/lib/Makefile
 
 	shared/Makefile
+	shared/src/Makefile
 	])
 
 AC_OUTPUT
