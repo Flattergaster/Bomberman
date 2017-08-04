@@ -1,19 +1,24 @@
 #include "../include/utils.h"
 
 void log_message(FILE *fd, int level, const char *format, va_list args) {
-    char message[512] = {0};
+    char message[MAX_LOG_MSG_SIZE];
+
+    memset(message, 0, MAX_LOG_MSG_SIZE);
 
     switch (level) {
         case E_NOTICE:
             strncat(message, "[NOTICE] ", 9);
             break;
+
         case E_WARNING:
             strncat(message, "[WARNING] ", 10);
             break;
+
         case E_ERROR:
             strncat(message, "[ERROR] ", 8);
             break;
     }
+
     strncat(message, format, 500);
     strcat(message, "\n");
 

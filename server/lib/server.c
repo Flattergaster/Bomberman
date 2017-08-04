@@ -6,6 +6,8 @@ pthread_mutex_t mutex_exit_player = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_player[MAX_PLAYERS];
 int exit_state = 0;
 
+uint8_t lowest_player_id = P_MIN_ID;
+
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
     int sd = 0, i = 0;
     socklen_t size;
@@ -49,14 +51,18 @@ int create_player(int sd, struct sockaddr_in client_addr) {
     for (index = 0; index < MAX_PLAYERS; index++) {
         if (players[index].p_id == 0) {
             /*TODO after add shared constants*/
-            players[index].p_id = 200;
+            players[index].p_id = lowest_player_id;
+            lowest_player_id++;
+
             do {
                 players[index].x = rand() % MAP_H;
                 players[index].y = rand() % MAP_W;                
             } while (map[players[index].x][players[index].y] == ST_CELL);
+
             map[players[index].x][players[index].y] = players[index].p_id;
-            players[index].bomb_str = rand();
-            players[index].bomb_pwr = rand();
+            /*TODO after add shared constants*/
+            players[index].bomb_str = 1;
+            players[index].bomb_pwr = 3;
             players[index].sd = sd;
             players[index].end_point = client_addr;
             return index;
@@ -259,37 +265,15 @@ int accept_player(int sd, struct sockaddr_in *addr,
 }
 
 int do_action(int index, uint8_t key) {
-    int player_x = 0, player_y = 0, i = 0, j = 0;
-    
-    player_x = players[index].x;
-    player_y = players[index].y;
+    int i = 0, j = 0;
     
     printf("Do action\n");
     switch (key) {
         case KEY_D:
-            if (map[player_x + 1][player_y] != 1) { /*player_x + 1 < MAP_H && map[player_x + 1][player_y] != 1*/
-                swap(&map[player_x][player_y], &map[player_x + 1][player_y]);
-                players[index].x = player_x + 1;
-            }
-        break;
         case KEY_U:
-            if (map[player_x - 1][player_y] != 1) { /*player_x - 1 > 0 && map[player_x - 1][player_y] != 1*/
-                swap(&map[player_x][player_y], &map[player_x - 1][player_y]);
-                players[index].x = player_x - 1;
-            }
-        break;
         case KEY_L:
-            if (map[player_x][player_y - 1] != 1) { /*player_y - 1 > 0 && map[player_x][player_y - 1] != 1*/
-                swap(&map[player_x][player_y], &map[player_x][player_y - 1]);
-                players[index].y = player_y - 1;
-            }
-        break;
         case KEY_R:
-             if (map[player_x][player_y + 1] != 1) { /*player_y + 1 < MAP_W && map[player_x][player_y + 1] != 1*/
-                swap(&map[player_x][player_y], &map[player_x][player_y + 1]);
-                players[index].y = player_y + 1;
-            }
-        break;
+            move_player(index, key);
         case KEY_S:
             /*TODO boom thread*/
         break;
@@ -306,6 +290,84 @@ int do_action(int index, uint8_t key) {
     }
     
     return 0;
+}
+
+void move_player(int index, int key) {
+    int cur_x = 0, cur_y = 0;
+    int mov_x = 0, mov_y = 0;
+    
+    cur_x = players[index].x;
+    cur_y = players[index].y;
+
+    switch (key) {
+        case KEY_D:
+            mov_x = cur_x + 1;
+            mov_y = cur_y;
+            break;
+        case KEY_U:
+            mov_x = cur_x - 1;
+            mov_y = cur_y;
+            break;
+        case KEY_L:
+            mov_x = cur_x;
+            mov_y = cur_y - 1;
+            break;
+        case KEY_R:
+            mov_x = cur_x;
+            mov_y = cur_y + 1;
+            break;
+    }
+
+    move(index, mov_x, mov_y);
+}
+
+void move(int index, int mov_x, int mov_y) {
+
+    switch (map[mov_x][mov_y]) {
+        case EMPTY_CELL:
+            set_player_pos(index, mov_x, mov_y);
+            break;
+        /*case POWER_BUFF:
+            set_player_pos(index, mov_x, mov_y);
+            apply_player_buff(index, POWER_BUFF);
+            break;
+        case STRENGTH_BUFF:
+            set_player_pos(index, mov_x, mov_y);
+            apply_player_buff(index, STRENGTH_BUFF);
+            break;*/
+        default:
+            break;
+    }
+}
+
+void set_player_pos(int index, int mov_x, int mov_y) {
+    int cur_x = 0, cur_y = 0;
+    
+    cur_x = players[index].x;
+    cur_y = players[index].y;
+
+    map[mov_x][mov_y] = players[index].p_id;
+    map[cur_x][cur_y] = EMPTY_CELL; 
+    
+    players[index].x = mov_x;
+    players[index].y = mov_y;
+    players[index].prev_x = cur_x;
+    players[index].prev_y = cur_y;
+}
+
+void apply_player_buff(int index, int b_type) {
+    /*
+    switch (b_type) {
+        case POWER_BUFF:
+            players[index].bomb_pwr += 1;
+            break;
+        case STRENGTH_BUFF:
+            players[index].bomb_str += 1;
+            break;
+        default:
+            break;
+    }
+    */
 }
 
 int kill_player(int index) {
@@ -337,20 +399,31 @@ int kill_player(int index) {
 }
 
 int generate_map() {
-    int i, j, k;
-    
     memset(map, 0, MAP_H * MAP_W);
-    
+
+    make_borders();
+    gen_st_cells();
+    gen_br_cells();
+
+    return 0;
+}
+
+void make_borders() {
+    int i, j;
     for (j = 0; j < MAP_W; j++) {
-        map[0][j] = 1;
+        map[0][j] = ST_CELL;
         map[MAP_H - 1][j] = ST_CELL;
     }
     
      for (i = 0; i < MAP_H; i++) {
-        map[i][0] = 1;
+        map[i][0] = ST_CELL;
         map[i][MAP_W - 1] = ST_CELL;
     }
-    
+}
+
+void gen_st_cells() {
+    int i, j, k;
+
     for (i = 2; i < MAP_H - 1; i += 2) {
         for (j = 2; j < MAP_W - 1; j += 2) {
             for (k = 0; k < MAP_W; k += 2) {
@@ -358,7 +431,6 @@ int generate_map() {
             }
         }
     }
-    return 0;
 }
 
 void broadcast_map() {
@@ -381,10 +453,17 @@ void broadcast_map() {
     }
 }
 
-void swap(unsigned char *a, unsigned char *b) {
-    int temp = 0;
-    
-    temp = *a;
-    *a = *b;
-    *b = temp;
+void gen_br_cells() {
+    int br_cnt = 0, br_x = 0, br_y = 0;
+
+    do {
+        do {
+            br_x = rand() % MAP_H;
+            br_y = rand() % MAP_W;
+        } while (map[br_x][br_y] != EMPTY_CELL);
+
+        map[br_x][br_y] = BR_CELL;
+        br_cnt++;
+
+    } while(br_cnt <  MAX_BR_CELLS);
 }
