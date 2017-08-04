@@ -1,6 +1,19 @@
 #ifndef BOMBERMAN_UTIL_H
 #define BOMBERMAN_UTIL_H
 
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <pthread.h>
+
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#include <errno.h>
+
 #define SERVER_PORT 1337
 
 #define E_NOTICE    0
@@ -19,19 +32,7 @@
 #define MAP_H 21
 
 #define MAX_MSG_SIZE 1024
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <pthread.h>
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <errno.h>
+#define MAX_LOG_MSG_SIZE 512
 
 void log_message(FILE * fd, int level, const char * format, va_list args);
 
