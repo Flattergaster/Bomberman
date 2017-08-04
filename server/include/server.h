@@ -15,6 +15,7 @@
 #define EMPTY_CELL   0
 #define P_MIN_ID     200
 #define P_MAX_ID     210
+#define MAX_BR_CELLS 150
 
 #include <poll.h>
 
