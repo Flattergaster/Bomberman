@@ -53,4 +53,6 @@ int do_action(int index, uint8_t key);
 void swap(unsigned char *a, unsigned char *b);
 void move(int index, int mov_x, int mov_y);
 void move_player(int index, int key);
+void set_player_pos(int index, int mov_x, int mov_y);
+void apply_player_buff(int index, int b_type);
 #endif

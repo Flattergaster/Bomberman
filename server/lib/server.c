@@ -302,14 +302,14 @@ void move(int index, int mov_x, int mov_y) {
         case EMPTY_CELL:
             set_player_pos(index, mov_x, mov_y);
             break;
-        case POWER_BUFF:
+        /*case POWER_BUFF:
             set_player_pos(index, mov_x, mov_y);
             apply_player_buff(index, POWER_BUFF);
             break;
         case STRENGTH_BUFF:
             set_player_pos(index, mov_x, mov_y);
             apply_player_buff(index, STRENGTH_BUFF);
-            break;
+            break;*/
         default:
             break;
     }
@@ -331,7 +331,7 @@ void set_player_pos(int index, int mov_x, int mov_y) {
 }
 
 void apply_player_buff(int index, int b_type) {
-
+    /*
     switch (b_type) {
         case POWER_BUFF:
             players[index].bomb_pwr += 1;
@@ -342,6 +342,7 @@ void apply_player_buff(int index, int b_type) {
         default:
             break;
     }
+    */
 }
 
 int kill_player(int index) {
