@@ -34,7 +34,7 @@ void init_surf(surface_t **surface) {
     }
 
     (*surface)->p_wnd_map = newwin(MAP_H + 2, WND_W, INFO_H, 1);
-    box((*surface)->p_wnd_map, 0, 0);
+    /*box((*surface)->p_wnd_map, 0, 0);*/
     (*surface)->wnd_map = derwin((*surface)->p_wnd_map,
                                     MAP_H, MAP_W, 1, 1);
 
@@ -59,6 +59,8 @@ void del_surf(surface_t **surface){
 
 void print_map(surface_t *surface, unsigned char p_id){
     int i = 0, j = 0;
+
+    wclear(surface->wnd_map);
 
     for (i = 0; i < MAP_H; ++i) {
         for(j = 0; j < MAP_W; ++j) {

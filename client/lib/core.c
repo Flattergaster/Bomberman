@@ -55,8 +55,8 @@ void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
 void print_usage() {
     printf("[Error] invalid argument syntax\n");
     printf("usage syntax: ./client [-def] -d [destination address]:[port] -s [source address]:[port]\n");
-    printf(" - destination address must be provided\n");
-    printf(" - source address is optional\n\n");
+    printf(" --- destination address must be provided\n");
+    printf(" --- source address is optional\n\n");
 }
 
 char *get_host_name() {
@@ -237,9 +237,29 @@ void *control_hndl(void* args) {
             }
         }
 
-    } while(1);
+    } while (1);
 }
 
 void *recv_hndl(void* args) {
+    connect_info_t *c_info = NULL;
+    ssize_t bts = 0;
+
+    if (args == NULL) {
+        perror("Client: args is NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    c_info = (connect_info_t *)args;
+
+    do {
+        bts = recvfrom(c_info->sd, map, MAP_H * MAP_W, 0, NULL, NULL);
+        if (bts == -1) {
+            perror("Client: recvfrom(dest_ip)");
+            exit(EXIT_FAILURE);
+        }
+
+        print_map(c_info->surface, c_info->p_id);
+    } while (1);
+
     return NULL;
 }
