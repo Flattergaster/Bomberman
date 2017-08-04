@@ -1,4 +1,5 @@
-#include "../include/bomb_t.h"
+#include "../include/bomb.h"
+#include "../include/game.h"
 
 
 void* bomb_thr(void* arg){
@@ -23,7 +24,7 @@ void* bomb_thr(void* arg){
                map,
                MAP_H * MAP_W,
                0,
-               &(players[ind].end_point),
+               (struct sockaddr *)&(players[ind].end_point),
                sizeof(players[ind].end_point));
     if (status < 0) {
         perror("sendto()");
@@ -99,9 +100,9 @@ void boom_cell(int ind, int cx, int cy, int *max, int prev_x, int prev_y){
                 (*max) = i + 1;/* ??? */
                 break;
             case P_MIN_ID ... P_MAX_ID:
-                for (j = 0; j < 10; ++j) {
+                for (j = 0; j < MAX_PLAYERS; ++j) {
                     if (players[i].p_id == map[x][y]) {
-                        kill(i);
+                        kill_player(i);
                         break;
                     }
                 }
