@@ -64,7 +64,7 @@ int create_player(int sd, struct sockaddr_in client_addr) {
 
             map[players[index].x][players[index].y] = players[index].p_id;
             /*TODO after add shared constants*/
-            players[index].bomb_str = 1;
+            players[index].bomb_radius = 1;
             players[index].bomb_pwr = 3;
             players[index].sd = sd;
             players[index].end_point = client_addr;
