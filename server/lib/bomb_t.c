@@ -1,13 +1,12 @@
-#include "../include/server.h"
+#include "../include/bomb_t.h"
+
 
 void* bomb_thr(void* arg){
-    int ind = (int) arg;
+    int ind = *((int*) arg);
     int i = 0, j = 0, prev_x = 0, prev_y = 0;
-    char buffer[64];
-    int max;
+    int max = 0, status = 0;
     prev_x = players[ind].prev_x;
     prev_y = players[ind].prev_y;
-    memset(buffer, 0, sizeof(buffer));
     if (map[prev_x][prev_y] == 0) {
         if (players[ind].bomb_cur < players[ind].bomb_max) {
             /*mutex_lock*/
@@ -28,10 +27,8 @@ void* bomb_thr(void* arg){
                sizeof(players[ind].end_point));
     if (status < 0) {
         perror("sendto()");
-        free(poll_fd);
-        free(buffer);
-        close(sd);
-        return -1;
+        close(players[ind].sd);
+        pthread_exit(0);
     }
     sleep(3);
     boom(ind, prev_x, prev_y);
@@ -52,14 +49,14 @@ void boom(int ind, int prev_x, int prev_y){
             ? MAP_W - prev_y
             : players[ind].bomb_str;
     /*mutex_lock*/
-    boom_cell(ind, 0, 1, &max[1], prev_x, rpev_y);
+    boom_cell(ind, 0, 1, &max[1], prev_x, prev_y);
     /*mutex_unlock*/
 
     max[2] = (players[ind].bomb_str > prev_y)
             ? prev_y
             : players[ind].bomb_str;
     /*mutex_lock*/
-    boom_cell(ind, 0, -1, &max[2], prev_x, rpev_y);
+    boom_cell(ind, 0, -1, &max[2], prev_x, prev_y);
     /*mutex_unlock*/
 
     /*mutex_lock*/
@@ -87,7 +84,7 @@ void boom(int ind, int prev_x, int prev_y){
 }
 
 void boom_cell(int ind, int cx, int cy, int *max, int prev_x, int prev_y){
-    int flag = 0m i = 0, j = 0, x = 0, y = 0;
+    int flag = 0, i = 0, j = 0, x = 0, y = 0;
     for (i = 0; i < (*max); ++i) {
         x = prev_x + i*cx;
         y = prev_x + i*cy;
@@ -123,8 +120,8 @@ void boom_cell(int ind, int cx, int cy, int *max, int prev_x, int prev_y){
     }
 }
 
-void clear_cell(int ind, int cs, int cy, int max, int prev_x, int prev_y){
-    int flag = 0m i = 0, j = 0, x = 0, y = 0;
+void clear_cell(int ind, int cx, int cy, int max, int prev_x, int prev_y){
+    int flag = 0, i = 0, j = 0, x = 0, y = 0;
     for (i = 0; i < max; ++i) {
         x = prev_x + i*cx;
         y = prev_x + i*cy;
@@ -133,7 +130,7 @@ void clear_cell(int ind, int cs, int cy, int max, int prev_x, int prev_y){
                 map[x][y]--;
                 break;
             case FIRE:
-                map[x][y] = 0;
+                map[x][y] = EMPTY_CELL;
                 break;
             default:
                 break;

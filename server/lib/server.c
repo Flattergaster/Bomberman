@@ -240,37 +240,15 @@ int accept_player(int sd, struct sockaddr_in *addr,
 }
 
 int do_action(int index, uint8_t key) {
-    int player_x = 0, player_y = 0, i = 0, j = 0;
-    
-    player_x = players[index].x;
-    player_y = players[index].y;
+    int i = 0, j = 0;
     
     printf("Do action\n");
     switch (key) {
         case KEY_D:
-            if (map[player_x + 1][player_y] != 1) { /*player_x + 1 < MAP_H && map[player_x + 1][player_y] != 1*/
-                swap(&map[player_x][player_y], &map[player_x + 1][player_y]);
-                players[index].x = player_x + 1;
-            }
-        break;
         case KEY_U:
-            if (map[player_x - 1][player_y] != 1) { /*player_x - 1 > 0 && map[player_x - 1][player_y] != 1*/
-                swap(&map[player_x][player_y], &map[player_x - 1][player_y]);
-                players[index].x = player_x - 1;
-            }
-        break;
         case KEY_L:
-            if (map[player_x][player_y - 1] != 1) { /*player_y - 1 > 0 && map[player_x][player_y - 1] != 1*/
-                swap(&map[player_x][player_y], &map[player_x][player_y - 1]);
-                players[index].y = player_y - 1;
-            }
-        break;
         case KEY_R:
-             if (map[player_x][player_y + 1] != 1) { /*player_y + 1 < MAP_W && map[player_x][player_y + 1] != 1*/
-                swap(&map[player_x][player_y], &map[player_x][player_y + 1]);
-                players[index].y = player_y + 1;
-            }
-        break;
+            move_player(index, key);
         case KEY_S:
             /*TODO boom thread*/
         break;
@@ -287,6 +265,84 @@ int do_action(int index, uint8_t key) {
     }
     
     return 0;
+}
+
+void move_player(int index, int key) {
+    int cur_x = 0, cur_y = 0;
+    int mov_x = 0, mov_y = 0;
+    
+    cur_x = players[index].x;
+    cur_y = players[index].y;
+
+    switch (key) {
+        case KEY_D:
+            mov_x = cur_x + 1;
+            mov_y = cur_y;
+            break;
+        case KEY_U:
+            mov_x = cur_x - 1;
+            mov_y = cur_y;
+            break;
+        case KEY_L:
+            mov_x = cur_x;
+            mov_y = cur_y - 1;
+            break;
+        case KEY_R:
+            mov_x = cur_x;
+            mov_y = cur_y + 1;
+            break;
+    }
+
+    move(index, mov_x, mov_y);
+}
+
+void move(int index, int mov_x, int mov_y) {
+
+    switch (map[mov_x][mov_y]) {
+        case EMPTY_CELL:
+            set_player_pos(index, mov_x, mov_y);
+            break;
+        /*case POWER_BUFF:
+            set_player_pos(index, mov_x, mov_y);
+            apply_player_buff(index, POWER_BUFF);
+            break;
+        case STRENGTH_BUFF:
+            set_player_pos(index, mov_x, mov_y);
+            apply_player_buff(index, STRENGTH_BUFF);
+            break;*/
+        default:
+            break;
+    }
+}
+
+void set_player_pos(int index, int mov_x, int mov_y) {
+    int cur_x = 0, cur_y = 0;
+    
+    cur_x = players[index].x;
+    cur_y = players[index].y;
+
+    map[mov_x][mov_y] = players[index].p_id;
+    map[cur_x][cur_y] = EMPTY_CELL; 
+    
+    players[index].x = mov_x;
+    players[index].y = mov_y;
+    players[index].prev_x = cur_x;
+    players[index].prev_y = cur_y;
+}
+
+void apply_player_buff(int index, int b_type) {
+    /*
+    switch (b_type) {
+        case POWER_BUFF:
+            players[index].bomb_pwr += 1;
+            break;
+        case STRENGTH_BUFF:
+            players[index].bomb_str += 1;
+            break;
+        default:
+            break;
+    }
+    */
 }
 
 int kill_player(int index) {
