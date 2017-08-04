@@ -5,4 +5,5 @@ server_SOURCES = main.c
 
 server_LDADD = ../lib/libserver.la
 server_LDADD += ../lib/libgame.la
+server_LDADD += ../lib/libbomb.la
 server_LDADD += $(top_srcdir)/shared/src/libutils.la

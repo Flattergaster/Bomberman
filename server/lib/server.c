@@ -1,12 +1,15 @@
 #include "../include/server.h"
+#include "../include/game.h"
 
 player_t players[MAX_PLAYERS];
+
 pthread_mutex_t mutex_map = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_exit_player = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_player[MAX_PLAYERS];
-int exit_state = 0;
 
 uint8_t lowest_player_id = P_MIN_ID;
+
+int exit_state = 0;
 
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
     int sd = 0, i = 0;
@@ -266,7 +269,8 @@ int accept_player(int sd, struct sockaddr_in *addr,
 
 int do_action(int index, uint8_t key) {
     int i = 0, j = 0;
-    
+    pthread_t bomb_th;
+
     printf("Do action\n");
     switch (key) {
         case KEY_D:
@@ -275,7 +279,12 @@ int do_action(int index, uint8_t key) {
         case KEY_R:
             move_player(index, key);
         case KEY_S:
-            /*TODO boom thread*/
+            pthread_create(
+                &bomb_th,
+                NULL,
+                bomb_thr,
+                &index);
+        
         break;
         case KEY_E:
             kill_player(index);
@@ -290,112 +299,6 @@ int do_action(int index, uint8_t key) {
     }
     
     return 0;
-}
-
-void move_player(int index, int key) {
-    int cur_x = 0, cur_y = 0;
-    int mov_x = 0, mov_y = 0;
-    
-    cur_x = players[index].x;
-    cur_y = players[index].y;
-
-    switch (key) {
-        case KEY_D:
-            mov_x = cur_x + 1;
-            mov_y = cur_y;
-            break;
-        case KEY_U:
-            mov_x = cur_x - 1;
-            mov_y = cur_y;
-            break;
-        case KEY_L:
-            mov_x = cur_x;
-            mov_y = cur_y - 1;
-            break;
-        case KEY_R:
-            mov_x = cur_x;
-            mov_y = cur_y + 1;
-            break;
-    }
-
-    move(index, mov_x, mov_y);
-}
-
-void move(int index, int mov_x, int mov_y) {
-
-    switch (map[mov_x][mov_y]) {
-        case EMPTY_CELL:
-            set_player_pos(index, mov_x, mov_y);
-            break;
-        /*case POWER_BUFF:
-            set_player_pos(index, mov_x, mov_y);
-            apply_player_buff(index, POWER_BUFF);
-            break;
-        case STRENGTH_BUFF:
-            set_player_pos(index, mov_x, mov_y);
-            apply_player_buff(index, STRENGTH_BUFF);
-            break;*/
-        default:
-            break;
-    }
-}
-
-void set_player_pos(int index, int mov_x, int mov_y) {
-    int cur_x = 0, cur_y = 0;
-    
-    cur_x = players[index].x;
-    cur_y = players[index].y;
-
-    map[mov_x][mov_y] = players[index].p_id;
-    map[cur_x][cur_y] = EMPTY_CELL; 
-    
-    players[index].x = mov_x;
-    players[index].y = mov_y;
-    players[index].prev_x = cur_x;
-    players[index].prev_y = cur_y;
-}
-
-void apply_player_buff(int index, int b_type) {
-    /*
-    switch (b_type) {
-        case POWER_BUFF:
-            players[index].bomb_pwr += 1;
-            break;
-        case STRENGTH_BUFF:
-            players[index].bomb_str += 1;
-            break;
-        default:
-            break;
-    }
-    */
-}
-
-int kill_player(int index) {
-    int status = 0;
-    if (players[index].p_id != 0) {        
-        status = sendto(
-                    players[index].sd,
-                    "Game Over!",
-                    strlen("Game Over!"),
-                    0,
-                    &players[index].end_point,
-                    sizeof(players[index].end_point));
-        if (status < 0) {
-            log_error(stdout, "sendto(): %s", strerror(errno));
-            return -1;
-        }
-        
-        map[players[index].x][players[index].y] = EMPTY_CELL;
-        
-        close(players[index].sd);
-        memset(&players[index], 0, sizeof(player_t));
-        
-        pthread_mutex_lock(&mutex_exit_player);
-        exit_state = 1;
-        pthread_mutex_unlock(&mutex_exit_player);
-        return 0;
-    }
-    return -1;
 }
 
 void broadcast_map() {

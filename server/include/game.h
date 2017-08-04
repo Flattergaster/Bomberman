@@ -1,7 +1,9 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef GAME_H
+#define GAME_H
 
 #include "../../shared/include/utils.h"
+
+#define MAX_PLAYERS 10
 
 #define ST_CELL      2
 #define BR_CELL      1
@@ -23,6 +25,8 @@ void make_borders();
 void gen_st_cells();
 void gen_br_cells();
 
+int kill_player(int index);
+
 typedef struct _player {
     int p_id;
     int x;
@@ -42,4 +46,18 @@ extern player_t players[];
 
 unsigned char map[MAP_H][MAP_W];
 
-#endif /* PLAYER_H*/
+/*pthread_mutex_t mutex_map = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_exit_player = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_player[MAX_PLAYERS];
+
+uint8_t lowest_player_id = P_MIN_ID;*/
+
+extern pthread_mutex_t mutex_map;
+extern pthread_mutex_t mutex_exit_player;
+extern pthread_mutex_t mutex_player[MAX_PLAYERS];
+
+extern uint8_t lowest_player_id;
+
+extern int exit_state;
+
+#endif /* GAME_H*/
