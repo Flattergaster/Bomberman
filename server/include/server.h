@@ -26,7 +26,7 @@ typedef struct _player {
     int y;
     int prev_x;
     int prev_y;
-    int bomb_str;
+    int bomb_radius;
     int bomb_pwr;
     int bomb_cur;
     int bomb_max;
