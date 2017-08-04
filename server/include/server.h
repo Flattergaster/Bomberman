@@ -56,4 +56,7 @@ void move(int index, int mov_x, int mov_y);
 void move_player(int index, int key);
 void set_player_pos(int index, int mov_x, int mov_y);
 void apply_player_buff(int index, int b_type);
+void make_borders();
+void gen_st_cells();
+void gen_br_cells();
 #endif
