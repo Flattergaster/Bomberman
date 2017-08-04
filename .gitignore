@@ -87,3 +87,7 @@ Makefile.in
 #bin
 /server/src/server
 /client/src/client
+
+#AntiArtem
+/COPYING
+/INSTALL
