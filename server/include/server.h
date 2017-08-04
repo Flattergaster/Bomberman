@@ -51,7 +51,8 @@ int accept_player(int sd, struct sockaddr_in *addr,
 int kill_player(int index);
 void *client_thread(void *args);
 int do_action(int index, uint8_t key);
-void swap(unsigned char *a, unsigned char *b);
+void broadcast_map();
+
 void move(int index, int mov_x, int mov_y);
 void move_player(int index, int key);
 void set_player_pos(int index, int mov_x, int mov_y);
