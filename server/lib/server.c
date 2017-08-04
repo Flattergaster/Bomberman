@@ -400,7 +400,7 @@ void make_borders()
 }
 
 void gen_st_cells() {
-    int i, j;
+    int i, j, k;
 
     for (i = 2; i < MAP_H - 1; i += 2) {
         for (j = 2; j < MAP_W - 1; j += 2) {
