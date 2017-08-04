@@ -4,7 +4,7 @@ int main() {
     struct sockaddr_in addr_server;
     int sd = 0, status = 0;
     
-    sd = create_socket(&addr_server, PORT);
+    sd = create_socket(&addr_server, SERVER_PORT);
     if (sd < 0) {
         exit(EXIT_FAILURE);
     }
