@@ -3,6 +3,8 @@
 player_t players[MAX_PLAYERS];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+uint8_t lowest_player_id = P_MIN_ID;
+
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
     int sd = 0, i = 0;
     socklen_t size;
@@ -46,14 +48,18 @@ int create_player(int sd, struct sockaddr_in client_addr) {
     for (index = 0; index < MAX_PLAYERS; index++) {
         if (players[index].p_id == 0) {
             /*TODO after add shared constants*/
-            players[index].p_id = 200;
+            players[index].p_id = lowest_player_id;
+            lowest_player_id++;
+
             do {
                 players[index].x = rand() % MAP_H;
                 players[index].y = rand() % MAP_W;                
             } while (map[players[index].x][players[index].y] == ST_CELL);
+
             map[players[index].x][players[index].y] = players[index].p_id;
-            players[index].bomb_str = rand();
-            players[index].bomb_pwr = rand();
+            /*TODO after add shared constants*/
+            players[index].bomb_str = 1;
+            players[index].bomb_pwr = 3;
             players[index].sd = sd;
             players[index].end_point = client_addr;
             return index;
@@ -375,12 +381,12 @@ int generate_map() {
     memset(map, 0, MAP_H * MAP_W);
     
     for (j = 0; j < MAP_W; j++) {
-        map[0][j] = 1;
+        map[0][j] = ST_CELL;
         map[MAP_H - 1][j] = ST_CELL;
     }
     
      for (i = 0; i < MAP_H; i++) {
-        map[i][0] = 1;
+        map[i][0] = ST_CELL;
         map[i][MAP_W - 1] = ST_CELL;
     }
     
