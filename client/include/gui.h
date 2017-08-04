@@ -42,7 +42,7 @@ void print_map(surface_t *surface, unsigned char p_id);
 #define ENEMY_U      L"\u00D8"
 #define BOMB_U       L"\u25CF"
 #define ST_CELL_U    L"\u2588"
-#define BR_CELL_U    L"\u2588"
+#define BR_CELL_U    L"\u2592"
 #define EMPTY_CELL_U L"\u2591"
 
 #endif
