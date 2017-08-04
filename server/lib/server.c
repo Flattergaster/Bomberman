@@ -297,19 +297,49 @@ void move_player(int index, int key) {
 }
 
 void move(int index, int mov_x, int mov_y) {
+
+    switch (map[mov_x][mov_y]) {
+        case EMPTY_CELL:
+            set_player_pos(index, mov_x, mov_y);
+            break;
+        case POWER_BUFF:
+            set_player_pos(index, mov_x, mov_y);
+            apply_player_buff(index, POWER_BUFF);
+            break;
+        case STRENGTH_BUFF:
+            set_player_pos(index, mov_x, mov_y);
+            apply_player_buff(index, STRENGTH_BUFF);
+            break;
+        default:
+            break;
+    }
+}
+
+void set_player_pos(int index, int mov_x, int mov_y) {
     int cur_x = 0, cur_y = 0;
     
     cur_x = players[index].x;
     cur_y = players[index].y;
 
-    switch (map[mov_x][mov_y]) {
-        case EMPTY_CELL:
-            map[mov_x][mov_y] = players[index].p_id;
-            map[cur_x][cur_y] = EMPTY_CELL; 
-            players[index].x = mov_x;
-            players[index].y = mov_y;
-            players[index].prev_x = cur_x;
-            players[index].prev_y = cur_y;
+    map[mov_x][mov_y] = players[index].p_id;
+    map[cur_x][cur_y] = EMPTY_CELL; 
+    
+    players[index].x = mov_x;
+    players[index].y = mov_y;
+    players[index].prev_x = cur_x;
+    players[index].prev_y = cur_y;
+}
+
+void apply_player_buff(int index, int b_type) {
+
+    switch (b_type) {
+        case POWER_BUFF:
+            players[index].bomb_pwr += 1;
+            break;
+        case STRENGTH_BUFF:
+            players[index].bomb_str += 1;
+            break;
+        default:
             break;
     }
 }
