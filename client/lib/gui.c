@@ -55,6 +55,10 @@ void del_surf(surface_t **surface){
     delwin((*surface)->wnd_map);
     delwin((*surface)->wnd_info);
 
+    echo();
+    curs_set(2);
+    keypad(stdscr, false);
+
     endwin();
 }
 
