@@ -5,6 +5,8 @@ void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
     switch (argc) {
         case 1:
             print_usage();
+            log_error(stdout, "too few arguments to initialize the client");
+
             exit(EXIT_FAILURE);
 
         case 2:
@@ -19,6 +21,8 @@ void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
             }
 
             print_usage();
+            log_error(stdout, "invalid arguments syntax to initialize the client");
+
             exit(EXIT_FAILURE);
 
         case 3:
@@ -31,6 +35,8 @@ void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
                 }
 
             print_usage();
+            log_error(stdout, "invalid arguments syntax to initialize the client");
+
             exit(EXIT_FAILURE);
 
         case 4:
@@ -44,32 +50,36 @@ void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
                     return;
 
             print_usage();
-            exit(EXIT_SUCCESS);
+            log_error(stdout, "invalid arguments syntax to initialize the client");
+
+            exit(EXIT_FAILURE);
 
         default:
             print_usage();
+            log_error(stdout, "too few or invalid arguments syntax to initialize the client");
+
             exit(EXIT_FAILURE);
     }
 }
 
 void print_usage() {
-    printf("[Error] invalid argument syntax\n");
     printf("usage syntax: ./client [-def] -d [destination address]:[port] -s [source address]:[port]\n");
     printf(" --- destination address must be provided\n");
     printf(" --- source address is optional\n\n");
 }
 
 char *get_host_name() {
+    int rtn = 0;
     char* host_name = NULL;
 
     host_name = calloc(MAX_HOSTNAME_SIZE, sizeof(char));
     if (host_name == NULL) {
-        perror("Client: calloc(host name)");
+        log_error(stdout, "calloc(host name)");
         exit(EXIT_FAILURE);
     }
 
-    gethostname(host_name, MAX_HOSTNAME_SIZE);
-    return host_name;
+    rtn = gethostname(host_name, MAX_HOSTNAME_SIZE);
+    return (rtn == 0) ?  host_name : NULL;
 }
 
 char *get_src_ip() {
@@ -77,10 +87,41 @@ char *get_src_ip() {
     struct hostent* hst = NULL;
 
     host_name = get_host_name();
+    if (host_name == NULL) {
+        log_error(stdout, "gethostname/get_host_name");
+        exit(EXIT_FAILURE);
+    }
+
     hst = gethostbyname(host_name);
+    if (hst == NULL) {
+        free(host_name);
+
+        log_error(stdout, "gethostbyname");
+        exit(EXIT_FAILURE);
+    }
 
     free(host_name);
     return inet_ntoa(*(struct in_addr *)hst->h_addr);
+}
+
+void sig_hndl(int sig_num) {
+    return;
+}
+
+void init_signal(struct sigaction *sig_act) {
+    int rtn = 0;
+
+    sig_act->sa_handler = sig_hndl;
+    sigemptyset(&sig_act->sa_mask);
+    sig_act->sa_flags = 0;
+
+    rtn = sigaction(SIGINT, sig_act, NULL);
+    if (rtn == -1) {
+        log_error(stdout, "sigaction");
+        exit(EXIT_FAILURE);
+    }
+
+    log_notice(stdout, "initialization signals (ctrl + c) processing");
 }
 
 void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip,
@@ -92,23 +133,29 @@ void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip,
 
     *sd = socket(AF_INET, SOCK_DGRAM, 0);
     if (*sd == -1) {
-        perror("Client: socket(dest_ip)");
+        log_error(stdout, "socket(dest_ip)");
 
         close(*sd);
         exit(EXIT_FAILURE);
     }
 
+    log_notice(stdout, "initialization socket");
+
     dst_addr->sin_family = AF_INET;
     dst_addr->sin_addr.s_addr = inet_addr((char*)dst_ip);
     dst_addr->sin_port = htons(*dst_port);
+
+    log_notice(stdout, "initialization sockadrr_in");
 }
 
-uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
+void init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, connect_info_t *c_info) {
     uint8_t p_id = 0, msg[MAX_MSG_SIZE];
     int epd = 0, rtn = 0;
     struct epoll_event ev, *events = NULL;
     socklen_t s_len = 0;
     ssize_t bts = 0;
+
+    log_notice(stdout, "connecting to the server");
 
     s_len = sizeof(struct sockaddr_in);
 
@@ -117,13 +164,13 @@ uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
 
     events = calloc(1, sizeof(struct epoll_event));
     if (events == NULL) {
-        perror("Client: calloc(events)");
+        log_error(stdout, "calloc(events)");
         exit(EXIT_FAILURE);
     }
 
     epd = epoll_create(1);
     if (epd == -1) {
-        perror("Client: epoll_create");
+        log_error(stdout, "epoll_create");
         exit(EXIT_FAILURE);
     }
 
@@ -132,7 +179,7 @@ uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
 
     rtn = epoll_ctl(epd, EPOLL_CTL_ADD, sd, &ev);
     if (rtn == -1) {
-        perror("Client: epoll_ctl(sd)");
+        log_error(stdout, "epoll_ctl(sd)");
         exit(EXIT_FAILURE);
     }
 
@@ -140,18 +187,20 @@ uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
 
     bts = sendto(sd, msg, strlen((char*)msg), 0, (struct sockaddr*)dst_addr, s_len);
     if (bts == -1) {
-        perror("Client: sendto(dest_ip)");
+        log_error(stdout, "sendto(dest_ip)");
         exit(EXIT_FAILURE);
     }
 
+    log_notice(stdout, "sending a welcome message to the server");
+
     rtn = epoll_wait(epd, events, 1, MAX_WAIT_TIME);
     if (rtn == -1) {
-        perror("Client: epoll_wait()");
+        log_error(stdout, "epoll_wait");
         exit(EXIT_FAILURE);
     }
     else
         if (rtn == 0) {
-            perror("Client: time exceeded");
+            log_error(stdout, "time exceeded");
             exit(EXIT_FAILURE);
         }
 
@@ -160,33 +209,53 @@ uint8_t init_connect(int sd, struct sockaddr_in *dst_addr) {
 
     bts = recvfrom(sd, &p_id, sizeof(uint8_t), 0, (struct sockaddr*)dst_addr, &s_len);
     if (bts == -1) {
-        perror("Client: recvfrom(dest_ip)");
+        log_error(stdout, "recvfrom(dest_ip)");
         exit(EXIT_FAILURE);
     }
+
+    if (p_id < 200 || p_id > 210) {
+        log_error(stdout, "ivalid player id");
+        exit(EXIT_FAILURE);
+    }
+
+    log_notice(stdout, "reciving the user ID from the server");
 
     s_len = sizeof(struct sockaddr_in);
     memset(dst_addr, 0, s_len);
 
     bts = recvfrom(sd, map, MAP_H * MAP_W, 0, (struct sockaddr*)dst_addr, &s_len);
     if (bts == -1) {
-        perror("Client: recvfrom(dest_ip)");
+        log_error(stdout, "recvfrom(dest_ip)");
         exit(EXIT_FAILURE);
     }
+    log_notice(stdout, "reciving the map");
+
+    print_map(surface, p_id);
+    log_notice(stdout, "print map");
 
     strncpy((char*)msg, "Connection completed successfully", strlen("Connection completed successfully"));
 
     bts = sendto(sd, msg, strlen((char*)msg), 0, (struct sockaddr*)dst_addr, s_len);
     if (bts == -1) {
-        perror("Client: sendto(dest_ip)");
+        log_error(stdout, "sendto(dest_ip)");
         exit(EXIT_FAILURE);
     }
+    log_notice(stdout, "sending a connection completed message to the server");
+
+    c_info->sd = sd;
+    c_info->dst_addr = *dst_addr;
+    c_info->p_id = p_id;
+    c_info->surface = surface;
+    log_notice(stdout, "initialization connect_info_t");
+
+    free(events);
 
     return p_id;
 }
 
 void *control_hndl(void* args) {
     int key = 0;
-    uint8_t pressed_key = 0;
+    uint8_t send_key = 0;
     connect_info_t *c_info = NULL;
     socklen_t s_len = 0;
     ssize_t bts = 0;
@@ -194,7 +263,7 @@ void *control_hndl(void* args) {
     s_len = sizeof(struct sockaddr_in);
 
     if (args == NULL) {
-        perror("Client: args is NULL");
+        log_error(stdout, "args is NULL");
         exit(EXIT_FAILURE);
     }
 
@@ -202,39 +271,43 @@ void *control_hndl(void* args) {
 
     do {
         key = getch();
-        pressed_key = 0;
+        send_key = 0;
+
         switch(key) {
             case KEY_UP:
-                pressed_key = KEY_U;
+                send_key = KEY_U;
                 break;
 
             case KEY_DOWN:
-                pressed_key = KEY_D;
+                send_key = KEY_D;
                 break;
 
             case KEY_LEFT:
-                pressed_key = KEY_L;
+                send_key = KEY_L;
                 break;
 
             case KEY_RIGHT:
-                pressed_key = KEY_R;
+                send_key = KEY_R;
                 break;
 
             case KEY_SPACE_N:
-                pressed_key = KEY_S;
+                send_key = KEY_S;
                 break;
 
             case KEY_ESC:
-                pressed_key = KEY_E;
+                send_key = KEY_E;
                 break;
         }
 
-        if (pressed_key != 0) {
-            bts = sendto(c_info->sd, &pressed_key, sizeof(uint8_t), 0, (struct sockaddr*)&c_info->dst_addr, s_len);
+        if (send_key != 0) {
+            bts = sendto(c_info->sd, &send_key, sizeof(uint8_t), 0, (struct sockaddr*)&c_info->dst_addr, s_len);
             if (bts == -1) {
-                perror("Client: sendto(dest_ip)");
+                log_error(stdout, "sendto(dest_ip)");
                 exit(EXIT_FAILURE);
             }
+
+            if (send_key == KEY_E)
+                pthread_exit(NULL);
         }
 
     } while (1);
@@ -245,7 +318,7 @@ void *recv_hndl(void* args) {
     ssize_t bts = 0;
 
     if (args == NULL) {
-        perror("Client: args is NULL");
+        log_error(stdout, "args is NULL");
         exit(EXIT_FAILURE);
     }
 
@@ -254,12 +327,10 @@ void *recv_hndl(void* args) {
     do {
         bts = recvfrom(c_info->sd, map, MAP_H * MAP_W, 0, NULL, NULL);
         if (bts == -1) {
-            perror("Client: recvfrom(dest_ip)");
-            exit(EXIT_FAILURE);
+            log_error(stdout, "recvfrom(dest_ip)");
+            pthread_exit(NULL);
         }
 
         print_map(c_info->surface, c_info->p_id);
-    } while (1);
-
-    return NULL;
+    } while(1);
 }

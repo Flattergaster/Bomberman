@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
+#define _GNU_SORCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -14,12 +16,14 @@
 
 #include <pthread.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 #include <errno.h>
 
 #include <arpa/inet.h>
 
 #include "gui.h"
+#include "../../shared/include/utils.h"
 
 #define DEF_DST_IP "192.168.2.1"
 #define DEF_DST_PORT 1337
@@ -58,8 +62,11 @@ void print_usage();
 char *get_host_name();
 char *get_src_ip();
 
+void sig_hndl(int sig_num);
+void init_signal(struct sigaction *sig_act);
+
 void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip, uint16_t *dst_port);
-uint8_t init_connect(int sd, struct sockaddr_in *dst_addr);
+void init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, connect_info_t *c_info);
 
 void *control_hndl(void* args);
 void *recv_hndl(void* args);

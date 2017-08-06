@@ -28,6 +28,7 @@ typedef struct _surface {
 
 void init_graph();
 void init_surf(surface_t **surface);
+
 void del_surf(surface_t **surface);
 void print_map(surface_t *surface, unsigned char p_id);
 
