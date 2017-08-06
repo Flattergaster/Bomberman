@@ -1,5 +1,4 @@
 #include "../include/game.h"
-#include "../include/bomb.h"
 
 int generate_map() {
     memset(map, 0, MAP_H * MAP_W);
@@ -175,13 +174,16 @@ void find_random_cell(int *x, int *y, int c_type) {
 }
 
 void *spawn_buffs(void *args) {
-    int x, y;
-    while (1) {
+    int x = 0, y = 0, buff_cnt = 0;
 
-        pthread_mutex_lock(&mutex_map);
-        find_random_cell(&x, &y, EMPTY_CELL);
-        map[x][y] = RADIUS_BUFF;
-        pthread_mutex_unlock(&mutex_map);
+    while (1) {
+        if (buff_cnt < MAX_BUFFS) {
+            pthread_mutex_lock(&mutex_map);
+            find_random_cell(&x, &y, EMPTY_CELL);
+            map[x][y] = RADIUS_BUFF;
+            pthread_mutex_unlock(&mutex_map);
+            buff_cnt++;
+        }
 
         sleep(15);
 

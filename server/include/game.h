@@ -1,22 +1,21 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "../../shared/include/utils.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+#include <arpa/inet.h>
 
-#define ST_CELL      2
-#define BR_CELL      1
-#define EMPTY_CELL   0
-#define BOMB         100
-#define FIRE         101
-#define RADIUS_BUFF  150
+#include "shared/include/utils.h"
+#include "shared/include/constants.h"
 
+#include "../include/bomb.h"
 
-#define MAX_PLAYERS  10
-#define P_MIN_ID     200
-#define P_MAX_ID     P_MIN_ID + MAX_PLAYERS - 1
-
-#define MAX_BR_CELLS 150
-
+#define MAX_BR_CELLS    150
+#define MAX_BUFFS       6
 #define MIN_BOMB_POWER  1
 #define MAX_BOMB_POWER  4
 #define MIN_BOMB_RADIUS 4

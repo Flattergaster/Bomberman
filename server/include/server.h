@@ -3,12 +3,19 @@
 
 #define _GNU_SOURCE
 
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <poll.h>
 
-#include "../../shared/include/utils.h"
+#include "shared/include/utils.h"
+#include "shared/include/constants.h"
 
-#define PORT 1337
-#define MAX_MESSAGE_SIZE 1400
+#include "../include/game.h"
+#include "../include/bomb.h"
 
 #define MAX_PORT_VALUE 65535
 
