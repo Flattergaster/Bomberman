@@ -249,8 +249,6 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, conn
     log_notice(stdout, "initialization connect_info_t");
 
     free(events);
-
-    return p_id;
 }
 
 void *control_hndl(void* args) {
