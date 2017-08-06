@@ -55,6 +55,9 @@ dkms.conf
 .idea
 CMakeLists.txt
 cmake-build-debug
+*.sublime-project
+*.sublime-workspace
+
 
 #Autotools
 .deps

@@ -11,8 +11,12 @@ int main() {
     }
     
     srand(time(NULL));
-    memset(players, 0, MAX_PLAYERS);
+    
+    memset(players, 0, MAX_PLAYERS * sizeof(player_t));
+    memset(exit_state, 0, MAX_PLAYERS * sizeof(int));
+
     generate_map();
+    start_buff_spawner();
    
     status = listener_new_clients(sd);
     if (status < 0)  {
