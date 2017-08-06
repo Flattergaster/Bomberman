@@ -12,7 +12,7 @@
 void* bomb_thr(void* arg);
 void boom(int *max, int ind, int prev_x, int prev_y, int *dead_players);
 void clear_fire(int *max, int prev_x, int prev_y);
-void boom_cell(int cx, int cy, int *max, int prev_x, int prev_y, int *dead_players);
+void boom_cell(int ind, int cx, int cy, int *max, int prev_x, int prev_y, int *dead_players);
 void clear_cell(int cx, int cy, int max, int prev_x, int prev_y);
 int plant_bomb(int ind, int x, int y);
 

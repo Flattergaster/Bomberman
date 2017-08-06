@@ -100,10 +100,13 @@ void set_player_pos(int index, int mov_x, int mov_y) {
     
     cur_x = players[index].x;
     cur_y = players[index].y;
+    if(map[cur_x][cur_y] >= BM_PL_MIN && map[cur_x][cur_y] <= BM_PL_MAX )
+        map[cur_x][cur_y] = BOMB;
+    else
+        map[cur_x][cur_y] = EMPTY_CELL;
 
     map[mov_x][mov_y] = players[index].p_id;
-    map[cur_x][cur_y] = EMPTY_CELL; 
-    
+
     players[index].x = mov_x;
     players[index].y = mov_y;
     players[index].prev_x = cur_x;

@@ -5,13 +5,14 @@ void* bomb_thr(void* arg){
     int i = 0, status = 0, prev_x = 0, prev_y = 0;
     int  max[4];
     int dead_players[MAX_PLAYERS];
-    ind = *((int*) arg);
-
+    ind = ((int*) arg);
     memset(dead_players, 0, MAX_PLAYERS * sizeof(int));
     memset(max, 0, sizeof(max));
-
-    prev_x = players[ind].prev_x;
-    prev_y = players[ind].prev_y;
+    printf("\n%d\n", ind);
+    prev_x = players[ind].x;
+    prev_y = players[ind].y;
+    perror("234");
+    printf("prev_x = %d, prev_y = %d\n", prev_x, prev_y);
 
     status = plant_bomb(ind, prev_x, prev_y);
 
@@ -24,6 +25,9 @@ void* bomb_thr(void* arg){
     sleep(BOMB_TIMER_S);
     
     pthread_mutex_lock(&mutex_map);
+    if (map[prev_x][prev_y] == players[ind].p_id + MAX_PLAYERS){
+        dead_players[ind] = 1;
+    }
     map[prev_x][prev_y] = EMPTY_CELL;
     pthread_mutex_unlock(&mutex_map);
 
@@ -56,10 +60,10 @@ int plant_bomb(int ind, int x, int y) {
     pthread_mutex_lock(&mutex_map);
     pthread_mutex_lock(&mutex_player[ind]);
 
-    if (map[x][y] == 0 
-        && players[ind].bomb_cur < players[ind].bomb_max) {
+    if (/*map[x][y] == 0 
+        && */players[ind].bomb_cur < players[ind].bomb_max) {
 
-            map[x][y] = BOMB;
+            map[x][y] = players[ind].p_id + MAX_PLAYERS;
             players[ind].bomb_cur++;
         }
     else
@@ -78,26 +82,26 @@ void boom(int *max, int ind, int prev_x, int prev_y, int *dead_players){
     for(int i = 0; i < 4; ++i) {
         max[i] = players[ind].bomb_radius;
     }
-
+    pthread_mutex_unlock(&mutex_player[ind]);
     // max[0] = (players[ind].bomb_radius > MAP_H - prev_x)
             // ? MAP_H - prev_x
             // : players[ind].bomb_radius;
-    boom_cell(1, 0, &max[0], prev_x, prev_y, dead_players);
+    boom_cell(ind, 1, 0, &max[0], prev_x, prev_y, dead_players);
 
     // max[1] = (players[ind].bomb_radius > MAP_W - prev_y)
     //         ? MAP_W - prev_y
     //         : players[ind].bomb_radius;
-    boom_cell(0, 1, &max[1], prev_x, prev_y, dead_players);
+    boom_cell(ind, 0, 1, &max[1], prev_x, prev_y, dead_players);
 
     // max[2] = (players[ind].bomb_radius > prev_y)
     //         ? prev_y
     //         : players[ind].bomb_radius;
-    boom_cell(0, -1, &max[2], prev_x, prev_y, dead_players);
+    boom_cell(ind, 0, -1, &max[2], prev_x, prev_y, dead_players);
 
     // max[3] = (players[ind].bomb_radius > prev_x)
     //         ? prev_x
     //         : players[ind].bomb_radius;
-    boom_cell(-1, 0, &max[3], prev_x, prev_y, dead_players);
+    boom_cell(ind, -1, 0, &max[3], prev_x, prev_y, dead_players);
     pthread_mutex_unlock(&mutex_map);
 
 }
@@ -113,8 +117,9 @@ void clear_fire(int *max, int prev_x, int prev_y){
     pthread_mutex_unlock(&mutex_map);
 }
 
-void boom_cell(int cx, int cy, int *max, int prev_x, int prev_y, int *dead_players){
+void boom_cell(int ind, int cx, int cy, int *max, int prev_x, int prev_y, int *dead_players){
     int flag = 0, i = 0, j = 0, x = 0, y = 0;
+
 
     for (i = 0; i < (*max); ++i) {
         x = prev_x + i*cx;
@@ -141,6 +146,15 @@ void boom_cell(int cx, int cy, int *max, int prev_x, int prev_y, int *dead_playe
                     }
                 }
                 map[x][y] = FIRE;
+                break;
+            case BM_PL_MIN ... BM_PL_MAX:
+                for (j = 0; j < MAX_PLAYERS; ++j) {
+                    if (players[j].p_id == map[x][y] - MAX_PLAYERS) {
+                        dead_players[j] = 1;
+                        break;
+                    }
+                }
+                map[x][y] = BOMB;
                 break;
             case FIRE:
                 if(x == prev_x && y == prev_y)

@@ -186,6 +186,7 @@ void *client_thread(void *args) {
             pthread_mutex_lock(&mutex_exit_player[index]);
             if (exit_state[index] == 1) {
                 exit_state[index] = 0;                
+                pthread_mutex_unlock(&mutex_exit_player[index]);
                 break;
             }
             pthread_mutex_unlock(&mutex_exit_player[index]);
@@ -290,7 +291,7 @@ int do_action(int index, uint8_t key) {
                 &bomb_th,
                 NULL,
                 bomb_thr,
-                &index);
+                index);
         
             break;
         case KEY_E:
