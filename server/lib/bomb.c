@@ -1,6 +1,4 @@
 #include "../include/bomb.h"
-#include "../include/game.h"
-#include "../include/server.h"
 
 void* bomb_thr(void* arg){
     int ind = 0;

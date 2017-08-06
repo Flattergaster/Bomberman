@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncursesw/ncurses.h>
-/*#include "../../shared/share.h"*/
-/*#include "../../shared/include/utils.h"*/
+
+#include "shared/include/constants.h"
 
 #define WND_W 51
 #define WND_H 24
@@ -31,15 +31,6 @@ void init_surf(surface_t **surface);
 
 void del_surf(surface_t **surface);
 void print_map(surface_t *surface, unsigned char p_id);
-
-#define ST_CELL      2
-#define BR_CELL      1
-#define EMPTY_CELL   0
-#define BOMB         100
-#define FIRE         101
-#define P_MIN_ID     200
-#define P_MAX_ID     210
-#define RADIUS_BUFF  150
 
 #define PLAYER_U      L"\u263A"
 #define ENEMY_U       L"\u2689"

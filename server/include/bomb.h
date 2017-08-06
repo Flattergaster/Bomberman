@@ -1,6 +1,9 @@
 #ifndef BOMB_H
 #define BOMB_H
 
+#include "../include/game.h"
+// #include "../include/server.h"
+
 #define BOMB_TIMER_S 2
 #define CLEAR_TIMER_MS 500000
 

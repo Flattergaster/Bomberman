@@ -23,7 +23,8 @@
 #include <arpa/inet.h>
 
 #include "gui.h"
-#include "../../shared/include/utils.h"
+#include "shared/include/utils.h"
+#include "shared/include/constants.h"
 
 #define DEF_DST_IP "192.168.2.1"
 #define DEF_DST_PORT 1337
@@ -34,18 +35,10 @@
 #define PORT_SIZE 6
 #define MAX_KEY_MSG 64
 #define MAX_HOSTNAME_SIZE 256
-#define MAX_MSG_SIZE 1024
 #define MAX_WAIT_TIME 10000
 
 #define KEY_SPACE_N 32
 #define KEY_ESC 27
-
-#define KEY_L 1
-#define KEY_R 2
-#define KEY_U 3
-#define KEY_D 4
-#define KEY_S 5
-#define KEY_E 6
 
 typedef struct _connect_info {
     int sd;

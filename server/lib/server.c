@@ -1,6 +1,4 @@
 #include "../include/server.h"
-#include "../include/game.h"
-#include "../include/bomb.h"
 
 player_t players[MAX_PLAYERS];
 
