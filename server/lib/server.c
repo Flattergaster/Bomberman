@@ -1,15 +1,16 @@
 #include "../include/server.h"
 #include "../include/game.h"
+#include "../include/bomb.h"
 
 player_t players[MAX_PLAYERS];
 
 pthread_mutex_t mutex_map = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_exit_player = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_exit_player[MAX_PLAYERS];
 pthread_mutex_t mutex_player[MAX_PLAYERS];
 
-uint8_t lowest_player_id = P_MIN_ID;
+uint8_t lowest_free_id = P_MIN_ID;
 
-int exit_state = 0;
+int exit_state[MAX_PLAYERS];
 
 int create_socket(struct sockaddr_in *addr, uint16_t port) {
     int sd = 0, i = 0;
@@ -53,19 +54,21 @@ int create_player(int sd, struct sockaddr_in client_addr) {
 
     for (index = 0; index < MAX_PLAYERS; index++) {
         if (players[index].p_id == 0) {
-            /*TODO after add shared constants*/
-            players[index].p_id = lowest_player_id;
-            lowest_player_id++;
 
-            do {
-                players[index].x = rand() % MAP_H;
-                players[index].y = rand() % MAP_W;                
-            } while (map[players[index].x][players[index].y] == ST_CELL);
+            players[index].p_id = lowest_free_id;
+            update_lowest_free_id();
 
+            pthread_mutex_lock(&mutex_map);
+        
+            find_random_cell(&players[index].x, &players[index].y, EMPTY_CELL);
             map[players[index].x][players[index].y] = players[index].p_id;
-            /*TODO after add shared constants*/
-            players[index].bomb_radius = 1;
-            players[index].bomb_pwr = 3;
+
+            pthread_mutex_unlock(&mutex_map);
+
+            players[index].bomb_radius = MIN_BOMB_RADIUS;
+            players[index].bomb_power = MIN_BOMB_POWER;
+            players[index].bomb_cur = 0;
+            players[index].bomb_max = MAX_BOMBS;
             players[index].sd = sd;
             players[index].end_point = client_addr;
             return index;
@@ -91,6 +94,7 @@ int listener_new_clients(int sd) {
     
     for (i = 0; i < MAX_PLAYERS; i++) {
         mutex_player[i] = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+        mutex_exit_player[i] = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
     }
 
     log_notice(stdout, "listen...\n");
@@ -181,17 +185,21 @@ void *client_thread(void *args) {
         if (status == 0) {
             broadcast_map();
             
-            if (exit_state == 1) {
-                pthread_mutex_lock(&mutex_exit_player);
-                exit_state = 0;
-                pthread_mutex_unlock(&mutex_exit_player);
-                
+            pthread_mutex_lock(&mutex_exit_player[index]);
+            if (exit_state[index] == 1) {
+                exit_state[index] = 0;                
                 break;
             }
+            pthread_mutex_unlock(&mutex_exit_player[index]);
+
         }
     }
     
     close(players[index].sd);
+    memset(&players[index], 0, sizeof(player_t));
+
+    update_lowest_free_id();
+
     pthread_exit(0);
 }
 
@@ -278,6 +286,7 @@ int do_action(int index, uint8_t key) {
         case KEY_L:
         case KEY_R:
             move_player(index, key);
+            break;
         case KEY_S:
             pthread_create(
                 &bomb_th,
@@ -285,10 +294,10 @@ int do_action(int index, uint8_t key) {
                 bomb_thr,
                 &index);
         
-        break;
+            break;
         case KEY_E:
             kill_player(index);
-        break;
+            break;
     }
     
     for (i = 0; i < MAP_H; i++) {
@@ -301,22 +310,11 @@ int do_action(int index, uint8_t key) {
     return 0;
 }
 
-void broadcast_map() {
-    int i = 0, status = 0;
-    
-    log_notice(stdout, "Send action on the pressed key\n");
-    for (i = 0; i < MAX_PLAYERS; i++) {
-        if (players[i].sd != 0) {
-            status = sendto(
-                        players[i].sd,
-                        map,
-                        MAP_H * MAP_W,
-                        0,
-                        &players[i].end_point,
-                        sizeof(players[i].end_point));
-             if (status < 0) {
-                log_error(stdout, "sendto(map): %s", strerror(errno));
-            }
-        }
-    }
+int start_buff_spawner() {
+    int status;
+    pthread_t buff_tid;
+
+    status = pthread_create(&buff_tid, NULL, spawn_buffs, NULL);
+
+    return status;
 }

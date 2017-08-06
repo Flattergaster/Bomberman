@@ -1,12 +1,9 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define _POSIX_C_SOURCE 1
 #define _GNU_SOURCE
 
 #include <poll.h>
-
-#include "bomb.h"
 
 #include "../../shared/include/utils.h"
 
@@ -22,6 +19,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
                             socklen_t *addr_len, int p_id);
 void *client_thread(void *args);
 int do_action(int index, uint8_t key);
-void broadcast_map();
+
+int start_buff_spawner();
 
 #endif

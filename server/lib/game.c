@@ -1,4 +1,5 @@
 #include "../include/game.h"
+#include "../include/bomb.h"
 
 int generate_map() {
     memset(map, 0, MAP_H * MAP_W);
@@ -39,10 +40,7 @@ void gen_br_cells() {
     int br_cnt = 0, br_x = 0, br_y = 0;
 
     do {
-        do {
-            br_x = rand() % MAP_H;
-            br_y = rand() % MAP_W;
-        } while (map[br_x][br_y] != EMPTY_CELL);
+        find_random_cell(&br_x, &br_y, EMPTY_CELL);
 
         map[br_x][br_y] = BR_CELL;
         br_cnt++;
@@ -143,15 +141,69 @@ int kill_player(int index) {
             return -1;
         }
         
-        map[players[index].x][players[index].y] = EMPTY_CELL;
-        
-        close(players[index].sd);
-        memset(&players[index], 0, sizeof(player_t));
-        
-        pthread_mutex_lock(&mutex_exit_player);
-        exit_state = 1;
-        pthread_mutex_unlock(&mutex_exit_player);
+        pthread_mutex_lock(&mutex_exit_player[index]);
+        exit_state[index] = 1;
+        pthread_mutex_unlock(&mutex_exit_player[index]);
         return 0;
     }
     return -1;
+}
+
+void update_lowest_free_id() {
+    int i, j, flag;
+    for (i = P_MIN_ID; i <= P_MAX_ID; i++) {
+        flag = 0;
+        for(j = 0; j < MAX_PLAYERS; j++) {
+            if (players[j].p_id == i) {
+                flag = 1;
+                break;
+            }
+        }
+        printf("%d ", flag);
+        if (flag == 0) {
+            lowest_free_id = i;
+            return;
+        }
+    }
+}
+
+void find_random_cell(int *x, int *y, int c_type) {
+    do {
+        *x = rand() % MAP_H;
+        *y = rand() % MAP_W;                
+    } while (map[*x][*y] != c_type);
+}
+
+void *spawn_buffs(void *args) {
+    int x, y;
+    while (1) {
+
+        pthread_mutex_lock(&mutex_map);
+        find_random_cell(&x, &y, EMPTY_CELL);
+        map[x][y] = RADIUS_BUFF;
+        pthread_mutex_unlock(&mutex_map);
+
+        sleep(15);
+
+        broadcast_map();
+    }
+}
+
+void broadcast_map() {
+    int i = 0, status = 0;
+    log_notice(stdout, "Send action on the pressed key\n");
+    for (i = 0; i < MAX_PLAYERS; i++) {
+        if (players[i].p_id != 0) {
+            status = sendto(
+                        players[i].sd,
+                        map,
+                        MAP_H * MAP_W,
+                        0,
+                        (struct sockaddr *)&players[i].end_point,
+                        sizeof(players[i].end_point));
+             if (status < 0) {
+                log_error(stdout, "sendto(map): %s", strerror(errno));
+            }
+        }
+    }
 }
