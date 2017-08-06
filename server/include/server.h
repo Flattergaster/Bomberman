@@ -1,8 +1,6 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#define _GNU_SOURCE
-
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
