@@ -45,6 +45,7 @@ void init_surf(surface_t **surface) {
 
     wrefresh((*surface)->p_wnd_map);
     wrefresh((*surface)->p_wnd_info);
+
     /*LOG - init_win*/
 }
 
@@ -53,6 +54,10 @@ void del_surf(surface_t **surface){
     delwin((*surface)->p_wnd_info);
     delwin((*surface)->wnd_map);
     delwin((*surface)->wnd_info);
+
+    echo();
+    curs_set(2);
+    keypad(stdscr, false);
 
     endwin();
 }
