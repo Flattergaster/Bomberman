@@ -165,12 +165,20 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     events = calloc(1, sizeof(struct epoll_event));
     if (events == NULL) {
         log_error(stdout, "calloc(events)");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
 
     epd = epoll_create(1);
     if (epd == -1) {
         log_error(stdout, "epoll_create");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
 
@@ -180,6 +188,10 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     rtn = epoll_ctl(epd, EPOLL_CTL_ADD, sd, &ev);
     if (rtn == -1) {
         log_error(stdout, "epoll_ctl(sd)");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
 
@@ -188,6 +200,10 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     bts = sendto(sd, msg, strlen((char*)msg), 0, (struct sockaddr*)dst_addr, s_len);
     if (bts == -1) {
         log_error(stdout, "sendto(dest_ip)");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
 
@@ -196,11 +212,19 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     rtn = epoll_wait(epd, events, 1, MAX_WAIT_TIME);
     if (rtn == -1) {
         log_error(stdout, "epoll_wait");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
     else
         if (rtn == 0) {
             log_error(stdout, "time exceeded");
+
+            del_surf(&surface);
+            close(sd);
+
             exit(EXIT_FAILURE);
         }
 
@@ -210,11 +234,19 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     bts = recvfrom(sd, &p_id, sizeof(uint8_t), 0, (struct sockaddr*)dst_addr, &s_len);
     if (bts == -1) {
         log_error(stdout, "recvfrom(dest_ip)");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
 
     if (p_id < 200 || p_id > 210) {
         log_error(stdout, "ivalid player id");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
 
@@ -226,6 +258,10 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     bts = recvfrom(sd, map, MAP_H * MAP_W, 0, (struct sockaddr*)dst_addr, &s_len);
     if (bts == -1) {
         log_error(stdout, "recvfrom(dest_ip)");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
     log_notice(stdout, "reciving the map");
@@ -238,6 +274,10 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid,
     bts = sendto(sd, msg, strlen((char*)msg), 0, (struct sockaddr*)dst_addr, s_len);
     if (bts == -1) {
         log_error(stdout, "sendto(dest_ip)");
+
+        del_surf(&surface);
+        close(sd);
+
         exit(EXIT_FAILURE);
     }
     log_notice(stdout, "sending a connection completed message to the server");
