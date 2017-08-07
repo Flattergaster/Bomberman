@@ -82,14 +82,14 @@ void move(int index, int mov_x, int mov_y) {
         case EMPTY_CELL:
             set_player_pos(index, mov_x, mov_y);
             break;
-        /*case POWER_BUFF:
+        case POWER_BUFF:
             set_player_pos(index, mov_x, mov_y);
             apply_player_buff(index, POWER_BUFF);
             break;
-        case STRENGTH_BUFF:
+        case RADIUS_BUFF:
             set_player_pos(index, mov_x, mov_y);
-            apply_player_buff(index, STRENGTH_BUFF);
-            break;*/
+            apply_player_buff(index, RADIUS_BUFF);
+            break;
         default:
             break;
     }
@@ -101,9 +101,13 @@ void set_player_pos(int index, int mov_x, int mov_y) {
     cur_x = players[index].x;
     cur_y = players[index].y;
 
+    if(map[cur_x][cur_y] >= BM_PL_MIN && map[cur_x][cur_y] <= BM_PL_MAX )
+        map[cur_x][cur_y] = BOMB;
+    else
+        map[cur_x][cur_y] = EMPTY_CELL;
+
     map[mov_x][mov_y] = players[index].p_id;
-    map[cur_x][cur_y] = EMPTY_CELL; 
-    
+
     players[index].x = mov_x;
     players[index].y = mov_y;
     players[index].prev_x = cur_x;
@@ -111,18 +115,26 @@ void set_player_pos(int index, int mov_x, int mov_y) {
 }
 
 void apply_player_buff(int index, int b_type) {
-    /*
+    int x, y;
+
+    x = players[index].x;
+    y = players[index].y;
+    
     switch (b_type) {
         case POWER_BUFF:
-            players[index].bomb_pwr += 1;
+            if (players[index].bomb_power < MAX_BOMB_POWER) {
+                players[index].bomb_power += 1;
+            }
             break;
-        case STRENGTH_BUFF:
-            players[index].bomb_str += 1;
+        case RADIUS_BUFF:
+            if (players[index].bomb_radius < MAX_BOMB_RADIUS) {
+                players[index].bomb_radius += 1;
+            }
             break;
         default:
             break;
     }
-    */
+
 }
 
 int kill_player(int index) {
@@ -174,26 +186,38 @@ void find_random_cell(int *x, int *y, int c_type) {
 }
 
 void *spawn_buffs(void *args) {
-    int x = 0, y = 0, buff_cnt = 0;
+    int x = 0, y = 0, buff = EMPTY_CELL;//, buff_cnt = 0;
+    int chance;
 
     while (1) {
-        if (buff_cnt < MAX_BUFFS) {
-            pthread_mutex_lock(&mutex_map);
-            find_random_cell(&x, &y, EMPTY_CELL);
-            map[x][y] = RADIUS_BUFF;
-            pthread_mutex_unlock(&mutex_map);
-            buff_cnt++;
-        }
+        srand(time(NULL));
+        chance = rand() % 101;
+    
+        // if (buff_cnt < MAX_BUFFS) {
+            
+        if (chance < POWER_B_CHANCE)
+            buff = POWER_BUFF;
+        else if (chance < RADIUS_B_CHANCE)
+            buff = RADIUS_BUFF;
 
+        pthread_mutex_lock(&mutex_map);
+        find_random_cell(&x, &y, EMPTY_CELL);
+        map[x][y] = buff;
+        pthread_mutex_unlock(&mutex_map);
+        
+            // buff_cnt++;
+        // }
+        if (buff != EMPTY_CELL)
+            broadcast_map("spawn buffs");
+    
         sleep(15);
-
-        broadcast_map();
+        buff = EMPTY_CELL;
     }
 }
 
-void broadcast_map() {
+void broadcast_map(const char *action) {
     int i = 0, status = 0;
-    log_notice(stdout, "Send action on the pressed key\n");
+    log_notice(stdout, "Broadcast map: %s\n", action);
     for (i = 0; i < MAX_PLAYERS; i++) {
         if (players[i].p_id != 0) {
             status = sendto(

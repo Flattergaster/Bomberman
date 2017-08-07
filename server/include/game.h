@@ -21,6 +21,9 @@
 #define MIN_BOMB_RADIUS 4
 #define MAX_BOMB_RADIUS 10
 
+#define POWER_B_CHANCE  10
+#define RADIUS_B_CHANCE 30 + POWER_B_CHANCE
+
 
 void move(int index, int mov_x, int mov_y);
 void move_player(int index, int key);
@@ -34,7 +37,7 @@ int kill_player(int index);
 void update_lowest_free_id();
 void find_random_cell(int *x, int *y, int c_type);
 void *spawn_buffs(void *args);
-void broadcast_map();
+void broadcast_map(const char *action);
 
 
 typedef struct _player {

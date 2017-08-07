@@ -14,10 +14,14 @@
 #define BOMB         100
 #define FIRE         101
 #define RADIUS_BUFF  150
+#define POWER_BUFF   151
 
 #define MAX_PLAYERS  10
 #define P_MIN_ID     200
 #define P_MAX_ID     P_MIN_ID + MAX_PLAYERS - 1
+
+#define BM_PL_MIN P_MAX_ID + 1
+#define BM_PL_MAX P_MAX_ID + MAX_PLAYERS
 
 #define MAX_MESSAGE_SIZE 1400
 #define MAX_MSG_SIZE MAX_MESSAGE_SIZE

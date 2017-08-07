@@ -88,11 +88,17 @@ void print_map(surface_t *surface, unsigned char p_id){
                 case BOMB:
                     waddwstr(surface->wnd_map, BOMB_U);
                     break;
+                case BM_PL_MIN ... BM_PL_MAX:
+                    waddwstr(surface->wnd_map, BM_PL_U);
+                    break;
                 case FIRE:
                     waddwstr(surface->wnd_map, FIRE_U);
                     break;
                 case RADIUS_BUFF:
                     waddwstr(surface->wnd_map, RADIUS_BUFF_U);
+                    break;
+                case POWER_BUFF:
+                    waddwstr(surface->wnd_map, POWER_BUFF_U);
                     break;
                 default:
                     waddwstr(surface->wnd_map, UNKNOWN_U);

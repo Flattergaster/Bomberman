@@ -39,7 +39,8 @@ void print_map(surface_t *surface, unsigned char p_id);
 #define ST_CELL_U     L"\u2588"
 #define BR_CELL_U     L"\u2592"
 #define EMPTY_CELL_U  L"\u2591"
-#define RADIUS_BUFF_U L"\u2604"
+#define RADIUS_BUFF_U L"\u254B"
+#define POWER_BUFF_U  L"\u2620"
 #define UNKNOWN_U 	  L"\u262D"
-
+#define BM_PL_U       L"\u25C9"
 #endif

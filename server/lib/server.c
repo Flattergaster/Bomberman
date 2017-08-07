@@ -25,13 +25,13 @@ int create_socket(struct sockaddr_in *addr, uint16_t port) {
     addr->sin_port = htons(port);
     size = sizeof(*addr);
 
-    if (bind(sd, addr, size) < 0) {
+    if (bind(sd, (struct sockaddr *)addr, size) < 0) {
         if (errno == EADDRINUSE) {
             for (i = SERVER_PORT + 1; i < MAX_PORT_VALUE; i++) {
                 errno = 0;
                 addr->sin_port = htons(i);
                 
-                if (bind(sd, addr, size) == 0) {
+                if (bind(sd, (struct sockaddr *)addr, size) == 0) {
                     break;
                 } 
             }
@@ -79,16 +79,15 @@ int create_player(int sd, struct sockaddr_in client_addr) {
 int listener_new_clients(int sd) {
     struct sockaddr_in client_addr;
     struct sockaddr_in server_addr;
-    pthread_t *threads = NULL;
     int status = 0, sd_client = 0, index_client = 0;
-    char *buffer = NULL;
-    int *args_thread = NULL, i = 0;
+    char buffer[MAX_MSG_SIZE];
+    int args_thread[MAX_PLAYERS], i = 0;
     socklen_t size_addr;
 
     size_addr = sizeof(client_addr);
-    buffer = calloc(MAX_MSG_SIZE, sizeof(char));
-    threads = malloc(sizeof(pthread_t) * MAX_PLAYERS);
-    args_thread = malloc(sizeof(int) * MAX_PLAYERS);
+
+    memset(args_thread, 0, sizeof(int) * MAX_PLAYERS);
+    memset(buffer, 0, sizeof(char) * MAX_MSG_SIZE);
     
     for (i = 0; i < MAX_PLAYERS; i++) {
         mutex_player[i] = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
@@ -102,7 +101,7 @@ int listener_new_clients(int sd) {
                     buffer, 
                     MAX_MSG_SIZE, 
                     0, 
-                    &client_addr, 
+                    (struct sockaddr *)&client_addr, 
                     &size_addr);
         if (status < 0) {
             log_error(stdout, "recvfrom()");
@@ -120,18 +119,14 @@ int listener_new_clients(int sd) {
         
         args_thread[index_client] = index_client;
         pthread_create(
-                &threads[index_client],
+                &players[index_client].tid_player,
                 NULL,
                 client_thread,
                 &args_thread[index_client]);
         
-        players[index_client].tid_player = threads[index_client];
     }
 
     close(sd);
-    free(buffer);
-    free(threads);
-
     return 0;
 }
 
@@ -161,7 +156,7 @@ void *client_thread(void *args) {
                     &pressed_key,
                     sizeof(uint8_t),
                     0,
-                    &players[index].end_point,
+                    (struct sockaddr *)&players[index].end_point,
                     &size_addr);
         if (status < 0) {
             log_error(stdout, "recvfrom(key): %s", strerror(errno));
@@ -176,20 +171,20 @@ void *client_thread(void *args) {
         
         log_notice(stdout, "Client pressed key\n");
         
+        pthread_mutex_lock(&mutex_exit_player[index]);
+        if (exit_state[index] == 1) {
+            exit_state[index] = 0;
+            pthread_mutex_unlock(&mutex_exit_player[index]);
+            break;
+        }
+        pthread_mutex_unlock(&mutex_exit_player[index]);
+
         pthread_mutex_lock(&mutex_map);
         status = do_action(index, pressed_key);
         pthread_mutex_unlock(&mutex_map);
         
         if (status == 0) {
-            broadcast_map();
-            
-            pthread_mutex_lock(&mutex_exit_player[index]);
-            if (exit_state[index] == 1) {
-                exit_state[index] = 0;                
-                break;
-            }
-            pthread_mutex_unlock(&mutex_exit_player[index]);
-
+            broadcast_map("player action");
         }
     }
     
@@ -218,7 +213,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
                 &p_id,
                 sizeof(p_id),
                 0,
-                addr,
+                (struct sockaddr *)addr,
                 *addr_len);
     if (status < 0) {
         perror("sendto()");
@@ -233,7 +228,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
                 map,
                 MAP_H * MAP_W,
                 0,
-                addr,
+                (struct sockaddr *)addr,
                 *addr_len);
      if (status < 0) {
         perror("sendto()");
@@ -262,7 +257,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
                     buffer,
                     MAX_MSG_SIZE,
                     0,
-                    addr,
+                    (struct sockaddr *)addr,
                     addr_len);
         printf("buffer: %s\n", buffer);
         printf("Accept connection with client\n");
@@ -274,7 +269,7 @@ int accept_player(int sd, struct sockaddr_in *addr,
 }
 
 int do_action(int index, uint8_t key) {
-    int i = 0, j = 0;
+    int i = 0, j = 0, ind = 0;
     pthread_t bomb_th;
 
     printf("Do action\n");
@@ -286,11 +281,12 @@ int do_action(int index, uint8_t key) {
             move_player(index, key);
             break;
         case KEY_S:
+            ind = index;
             pthread_create(
                 &bomb_th,
                 NULL,
                 bomb_thr,
-                &index);
+                &ind);
         
             break;
         case KEY_E:
