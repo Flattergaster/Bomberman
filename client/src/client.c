@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     init_surf(&surface);
 
     init_socket(&sd, &dst_addr, dst_ip, &dst_port);
-    init_connect(sd, &dst_addr, surface,  &c_info);
+    init_connect(sd, &dst_addr, &ctl_hndl_tid, &recv_hndl_tid, surface, &c_info);
 
     log_notice(stdout, "connected to the server: %s:%hu", dst_ip, dst_port);
     log_notice(stdout, "player ID: %hu", c_info.p_id);
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     pthread_create(&recv_hndl_tid, NULL, recv_hndl, (void *)&c_info);
 
     pthread_join(ctl_hndl_tid, (void **)status);
-    /*pthread_join(recv_hndl_tid, (void **)status);*/
+    pthread_join(recv_hndl_tid, (void **)status);
 
     del_surf(&surface);
     close(sd);

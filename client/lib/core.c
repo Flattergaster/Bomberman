@@ -148,7 +148,7 @@ void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip,
     log_notice(stdout, "initialization sockadrr_in");
 }
 
-void init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, connect_info_t *c_info) {
+void init_connect(int sd, struct sockaddr_in *dst_addr, pthread_t *ctl_hndl_tid, pthread_t *recv_hndl_tid, surface_t *surface, connect_info_t *c_info) {
     uint8_t p_id = 0, msg[MAX_MSG_SIZE];
     int epd = 0, rtn = 0;
     struct epoll_event ev, *events = NULL;
@@ -246,13 +246,16 @@ void init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, conn
     c_info->dst_addr = *dst_addr;
     c_info->p_id = p_id;
     c_info->surface = surface;
-    log_notice(stdout, "initialization connect_info_t");
+    c_info->ctl_hndl_tid = ctl_hndl_tid;
+    c_info->recv_hndl_tid = recv_hndl_tid;
+
+    log_notice(stdout, "initialization struct connect_info_t");
 
     free(events);
 }
 
 void *control_hndl(void* args) {
-    int key = 0;
+    int key = 0, rtn = 0;
     uint8_t send_key = 0;
     connect_info_t *c_info = NULL;
     socklen_t s_len = 0;
@@ -304,14 +307,22 @@ void *control_hndl(void* args) {
                 exit(EXIT_FAILURE);
             }
 
-            if (send_key == KEY_E)
+            if (send_key == KEY_E) {
+                rtn = pthread_cancel(*c_info->recv_hndl_tid);
+                if (rtn != 0) {
+                    log_error(stdout, "pthread_cancel(recv_hndl_tid)");
+                    exit(EXIT_FAILURE);
+                }
+
                 pthread_exit(NULL);
+            }
         }
 
     } while (1);
 }
 
 void *recv_hndl(void* args) {
+    int rtn = 0;
     connect_info_t *c_info = NULL;
     ssize_t bts = 0;
 
@@ -326,6 +337,16 @@ void *recv_hndl(void* args) {
         bts = recvfrom(c_info->sd, map, MAP_H * MAP_W, 0, NULL, NULL);
         if (bts == -1) {
             log_error(stdout, "recvfrom(dest_ip)");
+            pthread_exit(NULL);
+        }
+
+        if (strncmp((char*)&map[0], "Game Over!", strlen("Game Over!")) == 0) {
+            rtn = pthread_cancel(*c_info->ctl_hndl_tid);
+            if (rtn != 0) {
+                log_error(stdout, "pthread_cancel(ctl_hndl_tid)");
+                exit(EXIT_FAILURE);
+            }
+
             pthread_exit(NULL);
         }
 

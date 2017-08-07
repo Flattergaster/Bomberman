@@ -45,11 +45,14 @@ typedef struct _connect_info {
     uint8_t p_id;
     struct sockaddr_in dst_addr;
     surface_t *surface;
+    pthread_t *ctl_hndl_tid;
+    pthread_t *recv_hndl_tid;
 } connect_info_t;
 
 unsigned char map[MAP_H][MAP_W];
 
-void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port, uint8_t *src_ip, uint16_t *src_port);
+void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
+                    uint8_t *src_ip, uint16_t *src_port);
 void print_usage();
 
 char *get_host_name();
@@ -58,8 +61,11 @@ char *get_src_ip();
 void sig_hndl(int sig_num);
 void init_signal(struct sigaction *sig_act);
 
-void init_socket(int *sd, struct sockaddr_in *dst_addr, uint8_t *dst_ip, uint16_t *dst_port);
-void init_connect(int sd, struct sockaddr_in *dst_addr, surface_t *surface, connect_info_t *c_info);
+void init_socket(int *sd, struct sockaddr_in *dst_addr,
+                    uint8_t *dst_ip, uint16_t *dst_port);
+void init_connect(int sd, struct sockaddr_in *dst_addr,
+                    pthread_t *ctl_hndl_tid, pthread_t* recv_hndl_tid,
+                    surface_t *surface, connect_info_t *c_info);
 
 void *control_hndl(void* args);
 void *recv_hndl(void* args);
