@@ -1,0 +1,16 @@
+language: c
+
+compiler:
+  - gcc
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get -y install libncursesw5-dev
+
+script: 
+  - ./autorun.sh
+  - ./configure
+  - make
+
+after_install:
+  - make distclean
