@@ -1,4 +1,4 @@
-#include "../include/utils.h"
+#include "utils.h"
 
 void log_message(FILE *fd, int level, const char *format, va_list args) {
     char message[MAX_LOG_MSG_SIZE];

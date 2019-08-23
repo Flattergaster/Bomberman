@@ -1,4 +1,4 @@
-#include "../include/core.h"
+#include "core.h"
 
 void parse_argvs(int argc, char **argv, uint8_t *dst_ip, uint16_t *dst_port,
                         uint8_t *src_ip, uint16_t *src_port) {

@@ -1,5 +1,5 @@
-#include "../include/server.h"
-#include "../include/game.h"
+#include "server.h"
+#include "game.h"
 
 int main() {
     struct sockaddr_in addr_server;

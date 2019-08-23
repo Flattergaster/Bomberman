@@ -1,4 +1,4 @@
-#include "../include/game.h"
+#include "game.h"
 
 int generate_map() {
     memset(map, 0, MAP_H * MAP_W);

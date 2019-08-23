@@ -1,4 +1,4 @@
-#include "../include/core.h"
+#include "core.h"
 
 int main(int argc, char **argv) {
     int sd = 0, *status = NULL;

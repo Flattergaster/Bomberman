@@ -1,4 +1,4 @@
-#include "../include/bomb.h"
+#include "bomb.h"
 
 void* bomb_thr(void* arg){
     int ind = 0;

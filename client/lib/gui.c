@@ -1,4 +1,4 @@
-#include "../include/gui.h"
+#include "gui.h"
 
 unsigned char map[MAP_H][MAP_W];
 
