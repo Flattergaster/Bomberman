@@ -1,9 +1,7 @@
 AC_INIT([Bomberman], [0.1.0])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
-
-#AC_CONFIG_MACRO_DIRS([m4])
 
 AC_PROG_CC
 AC_PROG_CC_STDC

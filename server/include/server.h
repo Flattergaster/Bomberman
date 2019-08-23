@@ -9,11 +9,11 @@
 #include <sys/types.h>
 #include <poll.h>
 
-#include "shared/include/utils.h"
-#include "shared/include/constants.h"
+#include "utils.h"
+#include "constants.h"
 
-#include "../include/game.h"
-#include "../include/bomb.h"
+#include "game.h"
+#include "bomb.h"
 
 #define MAX_PORT_VALUE 65535
 

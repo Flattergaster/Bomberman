@@ -22,9 +22,10 @@
 
 #include <arpa/inet.h>
 
+#include "utils.h"
+#include "constants.h"
+
 #include "gui.h"
-#include "shared/include/utils.h"
-#include "shared/include/constants.h"
 
 #define DEF_DST_IP "192.168.2.1"
 #define DEF_DST_PORT 1337

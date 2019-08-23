@@ -1,4 +1,4 @@
-#include "../include/server.h"
+#include "server.h"
 
 player_t players[MAX_PLAYERS];
 

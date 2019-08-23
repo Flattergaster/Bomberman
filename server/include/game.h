@@ -9,10 +9,10 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
-#include "shared/include/utils.h"
-#include "shared/include/constants.h"
+#include "utils.h"
+#include "constants.h"
 
-#include "../include/bomb.h"
+#include "bomb.h"
 
 #define MAX_BR_CELLS    150
 #define MAX_BUFFS       6

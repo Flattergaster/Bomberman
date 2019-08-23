@@ -10,7 +10,7 @@
 #include <string.h>
 #include <ncursesw/ncurses.h>
 
-#include "shared/include/constants.h"
+#include "constants.h"
 
 #define WND_W 51
 #define WND_H 24
